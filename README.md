@@ -1,2 +1,3 @@
-Endless Runner Game 
+**Endless Runner Game ** 
+  
 Project for CS105
