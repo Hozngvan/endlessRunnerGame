@@ -64,6 +64,15 @@ export class Game {
     this.scene.add(ambientLight);
   }
   
+  updateCamera() {
+    // Camera follows the player
+
+    this.camera.position.x = this.player.position.x;
+    this.camera.position.y = this.player.position.y + 1.5;
+    this.camera.position.z = this.player.position.z;
+    this.camera.lookAt(this.player.position.x, this.player.position.y + 1.5, -2);
+  }
+
   setupControls() {
     document.addEventListener('keydown', (e) => {
       if (this.isGameOver) return;
@@ -135,7 +144,7 @@ export class Game {
     
     requestAnimationFrame(() => this.animate());
     
-    const delta = 0.016; // Approximately 60fps
+    const delta = 0.006; // Approximately 60fps
     
     // Update game speed based on score
     this.speed += this.speedIncrement;
@@ -154,6 +163,8 @@ export class Game {
     // Update score (based on distance traveled)
     this.score += this.speed * delta;
     this.ui.updateScore(Math.floor(this.score));
+    
+    this.updateCamera();
     
     // Render the scene
     this.renderer.render(this.scene, this.camera);
