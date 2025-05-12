@@ -184,6 +184,51 @@ export class ObstacleManager {
     return false;
   }
   
+  checkCoinCollision(playerPosition) {
+    // Tạo bounding box cho người chơi
+    const playerBoundingBox = new THREE.Box3().setFromCenterAndSize(
+      playerPosition,
+      new THREE.Vector3(1, 2, 1)
+    );
+    
+    const collectedCoins = [];
+    
+    // Kiểm tra va chạm với từng đồng tiền
+    for (let i = 0; i < this.coins.length; i++) {
+      const coin = this.coins[i];
+      
+      // Chỉ kiểm tra các đồng tiền trong khoảng gần người chơi
+      if (coin.position.z > -1 && coin.position.z < 1) {
+        const coinBoundingBox = new THREE.Box3().setFromObject(coin);
+        
+        // Nếu có va chạm với đồng tiền
+        if (playerBoundingBox.intersectsBox(coinBoundingBox)) {
+          // Thêm đồng tiền vào danh sách đã thu thập
+          console.log('Collected coin---------------:', i);
+          collectedCoins.push(i);
+        }
+      }
+    }
+    
+    // Xóa các đồng tiền đã thu thập (từ cuối mảng lên để tránh lỗi index)
+    for (let i = collectedCoins.length - 1; i >= 0; i--) {
+      const coinIndex = collectedCoins[i];
+      const coin = this.coins[coinIndex];
+      
+      // Xóa đồng tiền khỏi scene và mảng
+      this.scene.remove(coin);
+      this.coins.splice(coinIndex, 1);
+      
+      // Tạo đồng tiền mới để thay thế
+      this.spawnCoin();
+      
+      // Đây là nơi bạn có thể thêm điểm, âm thanh hoặc hiệu ứng khi nhặt đồng tiền
+    }
+    console.log('Collected coins:', collectedCoins);
+    // Trả về số lượng đồng tiền đã thu thập
+    return collectedCoins.length;
+  }
+
   reset() {
     // Remove all existing obstacles and coins
     this.obstacles.forEach(obstacle => this.scene.remove(obstacle));

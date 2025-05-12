@@ -11,6 +11,7 @@ export class Game {
     this.baseSpeed = 15;
     this.speedIncrement = 0.0005;
     this.score = 0;
+    this.coinScore = 0;
     this.isGameOver = false;
     this.lanes = [-4, 0, 4];
     this.currentLane = 1; // Middle lane
@@ -133,6 +134,7 @@ export class Game {
   start() {
     this.isGameOver = false;
     this.score = 0;
+    this.coinScore = 0;
     this.speed = this.baseSpeed;
     this.ui.updateScore(this.score);
     this.ui.hideGameOver();
@@ -160,9 +162,12 @@ export class Game {
       return;
     }
     
+    const coinnumbers = this.checkCoinCollisions();
+
+    // console.log(this.coinScore);
     // Update score (based on distance traveled)
     this.score += this.speed * delta;
-    this.ui.updateScore(Math.floor(this.score));
+    this.ui.updateScore(Math.floor(this.score + coinnumbers));
     
     // this.updateCamera();
     
@@ -177,9 +182,22 @@ export class Game {
     );
   }
   
+  checkCoinCollisions(){
+    // Gọi hàm kiểm tra va chạm coin mà chúng ta đã thêm
+    const coinsCollected = this.obstacleManager.checkCoinCollision(this.player.position);
+    // console.log('Coins collected:', coinsCollected);
+    
+    if (coinsCollected > 0) {
+      // Cộng điểm cho mỗi đồng tiền thu được
+      this.coinScore += coinsCollected * this.coinValue;
+      console.log('Coins collected lớn hơn 0:', coinsCollected);
+    }
+    
+    return coinsCollected;
+  }
   gameOver() {
     this.isGameOver = true;
-    this.ui.showGameOver(Math.floor(this.score));
+    this.ui.showGameOver(Math.floor(this.score + this.checkCoinCollisions));
     
     // Add event listener for restart
     const restartHandler = () => {
