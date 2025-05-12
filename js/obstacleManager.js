@@ -99,7 +99,7 @@ export class ObstacleManager {
 
     const coin = new THREE.Mesh(geometry, material);
     coin.position.set(lane, 1.5, z);
-    coin.rotation.x = Math.PI / 2;
+    coin.rotation.y = Math.PI / 2;
     coin.castShadow = true;
     coin.receiveShadow = true;
 
@@ -121,10 +121,20 @@ export class ObstacleManager {
   }
   
   spawnCoin(z = this.spawnDistance) {
-    const laneIndex = Math.floor(Math.random() * this.lanes.length);
+    const closeCoin = this.coins.find(coin => Math.abs(coin.position.z - z) < 5);
+    if (closeCoin) {
+      return; // Đã có coin gần đó, không spawn thêm
+    }
+
+    let laneIndex;
+    const possibleIndexes = this.lanes.map((_, idx) => idx).filter(idx => idx !== this.lastCoinLaneIndex);
+    laneIndex = possibleIndexes[Math.floor(Math.random() * possibleIndexes.length)];
+
+    this.lastCoinLaneIndex = laneIndex;
     const lane = this.lanes[laneIndex];
+
     this.createCoin(lane, z);
-  }
+    }
   
   update(delta, speed) {
     // Move obstacles
@@ -149,7 +159,7 @@ export class ObstacleManager {
     for (let i = this.coins.length - 1; i >= 0; i--) {
       const coin = this.coins[i];
       coin.position.z += speed * delta;
-      coin.rotation.z += 2 * delta; // Spin the coin
+      coin.rotation.y += 2 * delta; // Spin the coin
       
       // Remove coins that have passed the player
       if (coin.position.z > this.despawnDistance) {
