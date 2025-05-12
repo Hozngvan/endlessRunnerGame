@@ -190,7 +190,7 @@ export class Game {
     if (coinsCollected > 0) {
       // Cộng điểm cho mỗi đồng tiền thu được
       this.coinScore += coinsCollected * this.coinValue;
-      console.log('Coins collected lớn hơn 0:', coinsCollected);
+      // console.log('Coins collected lớn hơn 0:', coinsCollected);
     }
     
     return coinsCollected;
