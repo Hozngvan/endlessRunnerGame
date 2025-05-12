@@ -146,7 +146,7 @@ export class Game {
     
     requestAnimationFrame(() => this.animate());
     
-    const delta = 0.016; // Approximately 60fps
+    const delta = 0.01; // Approximately 60fps
     
     // Update game speed based on score
     this.speed += this.speedIncrement;

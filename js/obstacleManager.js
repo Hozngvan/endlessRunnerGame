@@ -109,7 +109,7 @@ export class ObstacleManager {
     this.coins.push(coin);
     return coin;
   }
-  
+
   spawnRandomObstacle(z = this.spawnDistance) {
     const laneIndex = Math.floor(Math.random() * this.lanes.length);
     const lane = this.lanes[laneIndex];
@@ -140,7 +140,7 @@ export class ObstacleManager {
       const coinZ = z - i * spacing;
       this.createCoin(lane, coinZ);
     }
-    }
+  }
   
   update(delta, speed) {
     // Move obstacles
@@ -186,7 +186,20 @@ export class ObstacleManager {
     for (const obstacle of this.obstacles) {
       if (obstacle.position.z > -1 && obstacle.position.z < 1) {
         const obstacleBoundingBox = new THREE.Box3().setFromObject(obstacle);
-        
+       
+        // Tính center và size ban đầu của bounding box
+        const center = new THREE.Vector3();
+        const size = new THREE.Vector3();
+        obstacleBoundingBox.getCenter(center);
+        obstacleBoundingBox.getSize(size);
+
+        // Trừ mỗi chiều 0.5 đơn vị
+        size.subScalar(0.5);
+
+        // Tạo bounding box mới với kích thước nhỏ hơn
+        obstacleBoundingBox.setFromCenterAndSize(center, size);
+
+
         if (playerBoundingBox.intersectsBox(obstacleBoundingBox)) {
           // If the player is jumping and the obstacle is a barrier, no collision
           if (isJumping && obstacle.type === 'barrier') {
@@ -215,7 +228,12 @@ export class ObstacleManager {
       
       // Chỉ kiểm tra các đồng tiền trong khoảng gần người chơi
       if (coin.position.z > -1 && coin.position.z < 1) {
-        const coinBoundingBox = new THREE.Box3().setFromObject(coin);
+        // const coinBoundingBox = new THREE.Box3().setFromObject(coin);
+        const originalBox = new THREE.Box3().setFromObject(coin);
+        const shrinkFactor = 0.4; // 60% size
+        const center = originalBox.getCenter(new THREE.Vector3());
+        const size = originalBox.getSize(new THREE.Vector3()).multiplyScalar(shrinkFactor);
+        const coinBoundingBox = new THREE.Box3().setFromCenterAndSize(center, size);
         
         // Nếu có va chạm với đồng tiền
         if (playerBoundingBox.intersectsBox(coinBoundingBox)) {
