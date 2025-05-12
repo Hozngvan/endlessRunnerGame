@@ -133,7 +133,13 @@ export class ObstacleManager {
     this.lastCoinLaneIndex = laneIndex;
     const lane = this.lanes[laneIndex];
 
-    this.createCoin(lane, z);
+    const coinCount = Math.floor(Math.random() * 3) + 3; // 3 đến 5 coin
+    const spacing = 2.5; // khoảng cách giữa mỗi coin trên trục Z
+
+    for (let i = 0; i < coinCount; i++) {
+      const coinZ = z - i * spacing;
+      this.createCoin(lane, coinZ);
+    }
     }
   
   update(delta, speed) {
