@@ -5,11 +5,11 @@ export class Player {
   constructor(scene, initialX) {
     this.scene = scene;
     this.position = new THREE.Vector3(initialX, 0.5, 0);
-    this.targetX = initialX;
+    this.targetX = initialX; // Làn chạy 
     this.isJumping = false;
     this.jumpHeight = 3;
     this.jumpSpeed = 8;
-    this.verticalVelocity = 0;
+    this.verticalVelocity = 0; // Speed 
     
     // Create player mesh (simple for now)
     this.createPlayerMesh();

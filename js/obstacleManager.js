@@ -1,4 +1,3 @@
-
 import * as THREE from 'three';
 
 export class ObstacleManager {
@@ -25,41 +24,87 @@ export class ObstacleManager {
       this.spawnCoin(-25 - i * 20);
     }
   }
-  
+
   createObstacle(type, lane, z) {
     let obstacle;
-    
+
+    const loader = new THREE.TextureLoader();
+
     if (type === 'barrier') {
-      // Barrier that can be jumped over
+      // Tập hợp màu cảnh báo
+      const warningColors = [0xff0000, 0xffa500, 0xffff00, 0xffffff];
+      const color = warningColors[Math.floor(Math.random() * warningColors.length)];
+  
       const geometry = new THREE.BoxGeometry(3, 1, 0.5);
-      const material = new THREE.MeshLambertMaterial({ color: 0xff0000 });
+  
+      const material = new THREE.MeshStandardMaterial({
+          color: color,
+          metalness: 0.3,
+          roughness: 0.5,
+          emissive: 0x000000,
+          emissiveIntensity: 0.05
+      });
+  
       obstacle = new THREE.Mesh(geometry, material);
       obstacle.position.set(lane, 0.5, z);
       obstacle.type = 'barrier';
       obstacle.castShadow = true;
+      obstacle.receiveShadow = true;
+  
+      // Optional: nghiêng nhẹ để trông tự nhiên hơn
+      obstacle.rotation.y = (Math.random() - 0.5) * 0.1;
+
     } else if (type === 'block') {
-      // Block that must be avoided
-      const geometry = new THREE.BoxGeometry(3, 3, 1);
-      const material = new THREE.MeshLambertMaterial({ color: 0xffcc00 });
-      obstacle = new THREE.Mesh(geometry, material);
-      obstacle.position.set(lane, 1.5, z);
-      obstacle.type = 'block';
-      obstacle.castShadow = true;
+        // Block: concrete-like large block
+        const geometry = new THREE.BoxGeometry(3, 3, 1);
+        const texture = loader.load('textures/concrete_diffuse.jpg');
+        const normalMap = loader.load('textures/concrete_diffus.jpg');
+
+        const material = new THREE.MeshStandardMaterial({
+            map: texture,
+            normalMap: normalMap,
+            metalness: 0.2,
+            roughness: 0.8,
+        });
+
+        obstacle = new THREE.Mesh(geometry, material);
+        obstacle.position.set(lane, 1.5, z);
+        obstacle.type = 'block';
+        obstacle.castShadow = true;
+        obstacle.receiveShadow = true;
     }
-    
+
     this.scene.add(obstacle);
     this.obstacles.push(obstacle);
     return obstacle;
   }
-  
+
   createCoin(lane, z) {
-    const geometry = new THREE.TorusGeometry(0.5, 0.2, 8, 16);
-    const material = new THREE.MeshLambertMaterial({ color: 0xFFD700 });
+    const outerRadius = 0.5;
+    const tubeRadius = 0.15;
+    const radialSegments = 32;
+    const tubularSegments = 64;
+
+    // Create a smoother torus
+    const geometry = new THREE.TorusGeometry(outerRadius, tubeRadius, radialSegments, tubularSegments);
+
+    // Use a shiny gold material
+    const material = new THREE.MeshStandardMaterial({
+        color: 0xFFD700,
+        metalness: 0.8,
+        roughness: 0.2,
+        emissive: 0x222200,
+        emissiveIntensity: 0.2
+    });
+
     const coin = new THREE.Mesh(geometry, material);
     coin.position.set(lane, 1.5, z);
     coin.rotation.x = Math.PI / 2;
     coin.castShadow = true;
-    
+    coin.receiveShadow = true;
+
+    // Optional: add a glowing outline using a sprite or subtle bloom later
+
     this.scene.add(coin);
     this.coins.push(coin);
     return coin;

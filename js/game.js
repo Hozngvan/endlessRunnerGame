@@ -21,7 +21,7 @@ export class Game {
     
     // Setup camera
     this.camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.1, 1000);
-    this.camera.position.set(0, 5, 10);
+    this.camera.position.set(5 , 10 , 20);
     this.camera.lookAt(0, 0, 0);
     
     // Setup renderer
