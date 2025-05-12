@@ -17,7 +17,7 @@ export class Player {
   
   createPlayerMesh() {
     // Player body
-    const bodyGeometry = new THREE.BoxGeometry(1, 2, 1);
+    const bodyGeometry = new THREE.BoxGeometry(1, 1, 1);
     const bodyMaterial = new THREE.MeshLambertMaterial({ color: 0x3498db });
     this.mesh = new THREE.Mesh(bodyGeometry, bodyMaterial);
     this.mesh.position.copy(this.position);
