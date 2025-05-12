@@ -204,7 +204,7 @@ export class ObstacleManager {
         // Nếu có va chạm với đồng tiền
         if (playerBoundingBox.intersectsBox(coinBoundingBox)) {
           // Thêm đồng tiền vào danh sách đã thu thập
-          console.log('Collected coin---------------:', i);
+          // console.log('Collected coin---------------:', i);
           collectedCoins.push(i);
         }
       }
@@ -224,7 +224,7 @@ export class ObstacleManager {
       
       // Đây là nơi bạn có thể thêm điểm, âm thanh hoặc hiệu ứng khi nhặt đồng tiền
     }
-    console.log('Collected coins:', collectedCoins);
+    // console.log('Collected coins:', collectedCoins);
     // Trả về số lượng đồng tiền đã thu thập
     return collectedCoins.length;
   }
