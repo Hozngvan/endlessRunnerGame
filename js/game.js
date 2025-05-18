@@ -22,8 +22,9 @@ export class Game {
     
     // Setup camera
     this.camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.1, 1000);
-    this.camera.position.set(5 , 10 , 20);
-    this.camera.lookAt(0, 0, 0);
+    //this.camera.position.set(0, 5, 10); // goc thu nhat
+    this.camera.position.set(5, 10, 20); // goc thu ba 
+    this.camera.lookAt(0, 3, 0);
     
     // Setup renderer
     this.renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -169,7 +170,7 @@ export class Game {
     this.score += this.speed * delta;
     this.ui.updateScore(Math.floor(this.score + coinnumbers));
     
-    // this.updateCamera();
+    //this.updateCamera();
     
     // Render the scene
     this.renderer.render(this.scene, this.camera);
