@@ -12,6 +12,7 @@ export class Game {
     this.speedIncrement = 0.0005;
     this.score = 0;
     this.coinScore = 0;
+    this.coinValue = 1;
     this.isGameOver = false;
     this.lanes = [-4, 0, 4];
     this.currentLane = 1; // Middle lane
@@ -22,9 +23,8 @@ export class Game {
     
     // Setup camera
     this.camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.1, 1000);
-    //this.camera.position.set(0, 5, 10); // goc thu nhat
-    this.camera.position.set(5, 10, 20); // goc thu ba 
-    this.camera.lookAt(0, 3, 0);
+    this.camera.position.set(5 , 10 , 20);
+    this.camera.lookAt(0, 0, 0);
     
     // Setup renderer
     this.renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -138,6 +138,7 @@ export class Game {
     this.coinScore = 0;
     this.speed = this.baseSpeed;
     this.ui.updateScore(this.score);
+    this.ui.updateCoinScore(this.coinScore);
     this.ui.hideGameOver();
     this.animate();
   }
@@ -147,7 +148,7 @@ export class Game {
     
     requestAnimationFrame(() => this.animate());
     
-    const delta = 0.01; // Approximately 60fps
+    const delta = 0.016; // Approximately 60fps
     
     // Update game speed based on score
     this.speed += this.speedIncrement;
@@ -168,9 +169,12 @@ export class Game {
     // console.log(this.coinScore);
     // Update score (based on distance traveled)
     this.score += this.speed * delta;
-    this.ui.updateScore(Math.floor(this.score + coinnumbers));
+    // console.log(coinnumbers);
+    // console.log(this.coinScore);
+    this.ui.updateScore(Math.floor(this.score));
+    this.ui.updateCoinScore(this.coinScore);
     
-    //this.updateCamera();
+    // this.updateCamera();
     
     // Render the scene
     this.renderer.render(this.scene, this.camera);
@@ -198,7 +202,7 @@ export class Game {
   }
   gameOver() {
     this.isGameOver = true;
-    this.ui.showGameOver(Math.floor(this.score + this.checkCoinCollisions));
+    this.ui.showGameOver(Math.floor(this.score), this.coinScore);
     
     // Add event listener for restart
     const restartHandler = () => {

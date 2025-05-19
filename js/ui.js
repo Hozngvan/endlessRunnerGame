@@ -17,6 +17,16 @@ export class UI {
     this.scoreElement.style.textShadow = '2px 2px 4px rgba(0, 0, 0, 0.5)';
     this.container.appendChild(this.scoreElement);
     
+    // Coin score element
+    this.coinScoreElement = document.createElement('div');
+    this.coinScoreElement.style.position = 'absolute';
+    this.coinScoreElement.style.top = '60px'; // Dưới điểm số chính
+    this.coinScoreElement.style.left = '20px';
+    this.coinScoreElement.style.color = 'yellow';
+    this.coinScoreElement.style.fontSize = '20px';
+    this.coinScoreElement.style.fontFamily = 'Arial, sans-serif';
+    this.coinScoreElement.style.textShadow = '2px 2px 4px rgba(0, 0, 0, 0.5)';
+    this.container.appendChild(this.coinScoreElement);
     // Game over element
     this.gameOverElement = document.createElement('div');
     this.gameOverElement.style.position = 'absolute';
@@ -49,10 +59,16 @@ export class UI {
     this.scoreElement.textContent = `Score: ${score}`;
   }
   
-  showGameOver(finalScore) {
+  updateCoinScore(coinScore) {
+    // console.log('Coin score:', coinScore);
+    this.coinScoreElement.textContent = `Coins: ${coinScore}`;
+  }
+
+  showGameOver(finalScore, finalCoinScore) {
     this.gameOverElement.innerHTML = `
       Game Over<br>
       Final Score: ${finalScore}<br>
+      Coins Collected: ${finalCoinScore}<br>
       <span style="font-size: 18px">Click or Press Any Key to Restart</span>
     `;
     this.gameOverElement.style.display = 'block';
