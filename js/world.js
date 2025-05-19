@@ -32,10 +32,21 @@ export class World {
   
   createRoadSegments() {
     this.roadSegments = [];
-    
+    const loader = new THREE.TextureLoader();
+
     // Create the road
     const roadGeometry = new THREE.PlaneGeometry(this.roadWidth, this.roadLength);
-    const roadMaterial = new THREE.MeshLambertMaterial({ color: 0x404040 });
+    const texture = loader.load('textures/img/matduong.jpg');
+    texture.wrapS = THREE.RepeatWrapping;
+    texture.wrapT = THREE.RepeatWrapping;
+    texture.repeat.set(this.roadWidth / 10, this.roadLength / 10); // tuỳ chỉnh mật độ lặp
+
+    const roadMaterial = new THREE.MeshLambertMaterial({ 
+      map: texture,
+      roughness: 0,
+      metalness: 0,
+      transparent: true,
+    });
     
     // Create multiple road segments that will move toward the player
     for (let i = 0; i < 3; i++) {
@@ -76,6 +87,31 @@ export class World {
       line.position.set(x, 0.02, 0); 
       this.scene.add(line); 
       this.crosswalkLines.push({ mesh: line, baseZ: segmentEndZ });
+    }
+
+    // Add sidelines
+    this.longSidelines = [];
+    const gach = loader.load('textures/img/gach.jpg');
+    const longSideGeometry = new THREE.BoxGeometry(0.3, 0.3, 2.5); // mỗi đoạn dài 2 đơn vị
+    const longSideMaterial = new THREE.MeshBasicMaterial({ 
+      map: gach,
+      
+    });
+
+    const sidePositions = [-7.5, 7.5]; // hai bên mép đường
+
+    for (let i = 0; i < 3; i++) { // cho 3 đoạn đường
+      const baseZ = -i * this.roadLength;
+
+      for (let posLine of sidePositions) {
+        for (let j = 0; j < this.roadLength / 4 ; j++) { // spacing = 4
+          const z = baseZ - j * 4 - 2;
+          const segment = new THREE.Mesh(longSideGeometry, longSideMaterial);
+          segment.position.set(posLine, 0.15, z);
+          this.scene.add(segment);
+          this.longSidelines.push(segment);
+        }
+      }
     }
   }
 
@@ -201,7 +237,7 @@ export class World {
   createBuildings() {
     this.sideBuildings = [];
 
-    const spacing = 8;
+    const spacing = 7;
     const roadSegmentCount = 3;
     const buildingCountPerSegment = this.roadLength / spacing -1 ;
 
@@ -314,7 +350,7 @@ export class World {
       }
     }
 
-    //Move buildings
+    // Move buildings
     for (let i = 0; i < this.sideBuildings.length; i++) {
       const segmentBuildings = this.sideBuildings[i];
       for (const building of segmentBuildings) {
@@ -324,6 +360,16 @@ export class World {
         if (building.position.z > this.roadLength / 2) {
           building.position.z -= this.roadLength * this.roadSegments.length;
         }
+      }
+    }
+
+    // Move long sideLines 
+    for (const line of this.longSidelines) {
+      line.position.z += speed * delta;
+
+      // Reset position if beyond camera
+      if (line.position.z > this.roadLength / 2) {
+        line.position.z -= this.roadLength * this.roadSegments.length;
       }
     }
 

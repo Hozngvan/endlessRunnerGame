@@ -8,7 +8,7 @@ export class ObstacleManager {
     this.coins = [];
     this.spawnDistance = -100;
     this.despawnDistance = 20;
-    this.obstacleTypes = ['barrier', 'block'];
+    this.obstacleTypes = ['barrier', 'block', 'fence'];
     
     // Create some initial obstacles
     this.init();
@@ -72,6 +72,23 @@ export class ObstacleManager {
         obstacle.type = 'block';
         obstacle.castShadow = true;
         obstacle.receiveShadow = true;
+    }
+    else if (type === 'fence') {
+      // Fence: player jump will collide
+      const geometry = new THREE.BoxGeometry(4, 0.5, 1);
+      const material = new THREE.MeshStandardMaterial({
+          color: 0x8B4513, // Brown color
+          metalness: 0.1,
+          roughness: 0.5,
+          emissive: 0x000000,
+          emissiveIntensity: 0.05
+      });
+
+      obstacle = new THREE.Mesh(geometry, material);
+      obstacle.position.set(lane, 2, z);
+      obstacle.type = 'fence';
+      obstacle.castShadow = true;
+      obstacle.receiveShadow = true;
     }
 
     this.scene.add(obstacle);
@@ -148,10 +165,10 @@ export class ObstacleManager {
       const obstacle = this.obstacles[i];
       obstacle.position.z += speed * delta;
       
-      // Rotate blocks slightly for visual interest
-      if (obstacle.type === 'block') {
-        obstacle.rotation.y += delta;
-      }
+      // // Rotate blocks slightly for visual interest
+      // if (obstacle.type === 'block') {
+      //   obstacle.rotation.y += delta;
+      // }
       
       // Remove obstacles that have passed the player
       if (obstacle.position.z > this.despawnDistance) {
