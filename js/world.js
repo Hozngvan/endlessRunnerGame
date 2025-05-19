@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { Sky } from 'three/examples/jsm/objects/sky.js';
 
 export class World {
   constructor(scene) {
@@ -10,7 +11,7 @@ export class World {
     this.createSkyBox();
     this.createRoadSegments();
     this.createBuildings();
-    //this.createClouds();
+    // this.createClouds();
   }
   
   createGround() {
@@ -24,12 +25,38 @@ export class World {
     this.scene.add(this.ground);
   }
   
-  createSkyBox() {
-    // Simple sky gradient (could be enhanced with a real skybox)
-    const verticalFog = new THREE.Fog(0x87ceeb, 50, 100);
-    this.scene.fog = verticalFog;
-  }
+  // createSkyBox() {
+  //   // Simple sky gradient (could be enhanced with a real skybox)
+  //   const verticalFog = new THREE.Fog(0x87ceeb, 50, 100);
+  //   this.scene.fog = verticalFog;
+  // }
   
+  createSkyBox() {
+    const sky = new Sky();
+    sky.scale.setScalar(450000);
+    this.scene.add(sky);
+
+    const skyUniforms = sky.material.uniforms;
+    skyUniforms['turbidity'].value = 10;
+    skyUniforms['rayleigh'].value = 2;
+    skyUniforms['mieCoefficient'].value = 0.005;
+    skyUniforms['mieDirectionalG'].value = 0.8;
+
+    // Vị trí mặt trời (ánh sáng)
+    const sun = new THREE.Vector3();
+    const theta = Math.PI * (0.49); // cao
+    const phi = 2 * Math.PI * (0.25); // góc quay
+    sun.x = Math.cos(phi) * Math.sin(theta);
+    sun.y = Math.cos(theta);
+    sun.z = Math.sin(phi) * Math.sin(theta);
+    sky.material.uniforms['sunPosition'].value.copy(sun);
+
+    // Optional: dùng thêm ánh sáng mặt trời (DirectionalLight)
+    const sunlight = new THREE.DirectionalLight(0xffffff, 1);
+    sunlight.position.copy(sun);
+    this.scene.add(sunlight);
+  }
+
   createRoadSegments() {
     this.roadSegments = [];
     const loader = new THREE.TextureLoader();
@@ -123,6 +150,8 @@ export class World {
     const buildingMaterial = new THREE.MeshLambertMaterial({color: 0xF0F8FF });
     const mainBlock = new THREE.Mesh(buildingGeometry, buildingMaterial);
     mainBlock.position.y = h / 2;
+    mainBlock.castShadow = true;
+    mainBlock.receiveShadow = true;
     building.add(mainBlock);
 
     // Tạo dải màu xanh giữa mặt tiền
@@ -158,6 +187,8 @@ export class World {
     const roofGeometry = new THREE.BoxGeometry(w * 1.05, h * 0.022, d * 1.05);
     const roofMaterial = new THREE.MeshLambertMaterial({ color: 0x00BFFF });
     const roof = new THREE.Mesh(roofGeometry, roofMaterial);
+    roof.castShadow = true;
+    roof.receiveShadow = true;
     roof.position.set(0, h - 0.1, 0);
     building.add(roof);
 
@@ -179,8 +210,9 @@ export class World {
     });
     const signMaterial = new THREE.MeshLambertMaterial({ color: 0xFFFFFF });
     const sign = new THREE.Mesh(signGeometry, signMaterial);
-
-    sign.position.set(0, h + 0.42, d / 2 + 0.02);
+    sign.castShadow = true;
+    sign.receiveShadow = true;
+    sign.position.set(0, h + 0.42, d / 2 - 0.1);
     sign.rotation.x = -Math.PI / 6;
     building.add(sign);
     
@@ -226,12 +258,74 @@ export class World {
     return mesh;
   }
 
+  // createBuilding_6(w, d, h) {
+  //   const geo = new THREE.BoxGeometry(w, h, d);
+  //   const mat = new THREE.MeshLambertMaterial({ color: 0xffcc99, wireframe: false });
+  //   const mesh = new THREE.Mesh(geo, mat);
+  //   // mesh.rotation.y = Math.PI / 4; // xoay tòa nhà
+  //   return mesh;
+  // }
+
   createBuilding_6(w, d, h) {
-    const geo = new THREE.BoxGeometry(w, h, d);
-    const mat = new THREE.MeshLambertMaterial({ color: 0xffcc99, wireframe: false });
-    const mesh = new THREE.Mesh(geo, mat);
-    // mesh.rotation.y = Math.PI / 4; // xoay tòa nhà
-    return mesh;
+    const building = new THREE.Group();
+
+    // -------- Khối chính của tòa nhà --------
+    const mainGeometry = new THREE.BoxGeometry(w, h, d);
+    const mainMaterial = new THREE.MeshLambertMaterial({ color: 0xd46a6a }); // đỏ gạch
+    const mainBlock = new THREE.Mesh(mainGeometry, mainMaterial);
+    mainBlock.position.y = h / 2;
+    building.add(mainBlock);
+
+    // -------- Ban công cho từng tầng --------
+    const floors = 4;
+    const floorHeight = h / floors;
+    const balconyDepth = 0.3;
+    const balconyHeight = floorHeight * 0.6;
+
+    const balconyGeometry = new THREE.BoxGeometry(w + 0.2, balconyHeight, balconyDepth);
+    const balconyMaterial = new THREE.MeshLambertMaterial({ color: 0xc85c5c });
+
+    for (let i = 1; i <= floors; i++) {
+      const balcony = new THREE.Mesh(balconyGeometry, balconyMaterial);
+      balcony.position.set(0, i * floorHeight - floorHeight / 2, d / 2 + balconyDepth / 2);
+      building.add(balcony);
+    }
+
+    // -------- Cửa sổ và cửa tầng chính giữa --------
+    const windowGeometry = new THREE.BoxGeometry(w * 0.2, floorHeight * 0.5, 0.02);
+    const windowMaterial = new THREE.MeshLambertMaterial({ color: 0x333333 });
+
+    for (let i = 0; i < floors; i++) {
+      const y = (i + 0.5) * floorHeight;
+      const leftWindow = new THREE.Mesh(windowGeometry, windowMaterial);
+      const rightWindow = new THREE.Mesh(windowGeometry, windowMaterial);
+      const centerWindow = new THREE.Mesh(windowGeometry, windowMaterial);
+
+      leftWindow.position.set(-w * 0.3, y, d / 2 + 0.02);
+      rightWindow.position.set(w * 0.3, y, d / 2 + 0.02);
+      centerWindow.position.set(0, y, d / 2 + 0.02);
+
+      building.add(leftWindow, rightWindow, centerWindow);
+    }
+
+    // -------- Dải cửa sổ bên hông trái --------
+    const sideWindowGeometry = new THREE.BoxGeometry(0.1, floorHeight * 0.6, 0.02);
+    for (let i = 0; i < floors; i++) {
+      const win = new THREE.Mesh(sideWindowGeometry, windowMaterial);
+      win.position.set(-w / 2 - 0.01, (i + 0.5) * floorHeight, -d / 3);
+      win.rotation.y = Math.PI / 2;
+      building.add(win);
+    }
+
+    // -------- Khung anten đơn giản trên nóc --------
+    const poleGeometry = new THREE.CylinderGeometry(0.03, 0.03, 1.5);
+    const poleMaterial = new THREE.MeshBasicMaterial({ color: 0xaaaaaa });
+
+    const pole = new THREE.Mesh(poleGeometry, poleMaterial);
+    pole.position.set(0, h + 0.75, 0);
+    building.add(pole);
+
+    return building;
   }
 
   createBuildings() {
@@ -260,12 +354,16 @@ export class World {
         const id = THREE.MathUtils.randInt(1, 6); // chọn mẫu tòa nhà từ 1 -> 6
 
         const left = this.createBuildingById(1, 6, 6, h);
+        left.receiveShadow = true;
+        left.castShadow = true;
         left.position.set(leftOffset, 0, zPos);
         this.scene.add(left);
         segmentBuildings.push(left);
 
-        const right = this.createBuildingById(id, w, d, h);
-        if (id === 1) {
+        const right = this.createBuildingById(id, 6, 6, h);
+        right.receiveShadow = true;
+        right.castShadow = true;
+        if (id === 1 || id === 6) {
           right.position.set(rightOffset, 0, zPos);
           right.rotation.y = -Math.PI / 2;
         }
