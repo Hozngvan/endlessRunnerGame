@@ -342,141 +342,214 @@ createBuilding_2(w, d, h) {
   }
 
   createBuilding_4(w, d, h) {
-    const building = new THREE.Group();
+    const park = new THREE.Group();
 
-    // Khối chính
-    const mainGeo = new THREE.BoxGeometry(w, h, d);
-    const mainMat = new THREE.MeshLambertMaterial({ color: 0x99cc99 });
-    const mainBlock = new THREE.Mesh(mainGeo, mainMat);
-    mainBlock.position.y = h / 2;
-    mainBlock.castShadow = true;
-    mainBlock.receiveShadow = true;
-    building.add(mainBlock);
+    // === Thảm cỏ (mặt nền) ===
+    const grassGeo = new THREE.BoxGeometry(w, 0.2, d); // Nhân đôi chiều cao từ 0.1 thành 0.2
+    grassGeo.translate(0, 0.1, 0);  // Dịch geometry để đáy chạm y=0 trong Group
 
-    // Tấm kính lớn
-    const floors = 5;
-    const floorHeight = h / floors;
-    const glassGeo = new THREE.BoxGeometry(w * 0.9, floorHeight * 0.6, 0.03);
-    const glassMat = new THREE.MeshLambertMaterial({ color: 0x87ceeb, transparent: true, opacity: 0.6 });
+    const grassMat = new THREE.MeshLambertMaterial({ color: 0x88cc66 });
+    const grass = new THREE.Mesh(grassGeo, grassMat);
+    grass.position.y = 0;            // Đáy thảm cỏ ở y=0 trong Group
+    park.add(grass);
 
-    for (let i = 0; i < floors; i++) {
-      const glass = new THREE.Mesh(glassGeo, glassMat);
-      glass.position.set(0, (i + 0.5) * floorHeight, d / 2 + 0.031);
-      glass.castShadow = true;
-      glass.receiveShadow = true;
-      building.add(glass);
+    // === Đường đi bộ ===
+    const pathGeo = new THREE.BoxGeometry(w * 0.8 * 2, 0.04, 1.2); // Nhân đôi kích thước
+    const pathMat = new THREE.MeshLambertMaterial({ color: 0xbbbbbb });
+    const path = new THREE.Mesh(pathGeo, pathMat);
+    path.position.y = 0.22; // Nằm trên mặt cỏ, nhân đôi từ 0.11
+    path.rotation.y = Math.PI / 2;
+    park.add(path);
+
+    // === Cây to ===
+    function createBigTree() {
+      const trunkGeo = new THREE.CylinderGeometry(0.1, 0.1, 0.8, 6); // Nhân đôi kích thước
+      const trunkMat = new THREE.MeshLambertMaterial({ color: 0x885522 });
+      const trunk = new THREE.Mesh(trunkGeo, trunkMat);
+      trunk.position.y = 0.4; // Nhân đôi từ 0.2
+
+      const crownGeo = new THREE.SphereGeometry(0.5, 6, 6); // Nhân đôi từ 0.25
+      const crownMat = new THREE.MeshLambertMaterial({ color: 0x339933 });
+      const crown = new THREE.Mesh(crownGeo, crownMat);
+      crown.position.y = 1.0; // Nhân đôi từ 0.5
+
+      const tree = new THREE.Group();
+      tree.add(trunk);
+      tree.add(crown);
+      return tree;
     }
 
-    // Mái nghiêng
-    const roofGeo = new THREE.BoxGeometry(w * 1.05, 0.3, d * 1.05);
-    const roofMat = new THREE.MeshLambertMaterial({ color: 0x555555 });
-    const roof = new THREE.Mesh(roofGeo, roofMat);
-    roof.position.set(0, h + 0.15, 0);
-    roof.rotation.z = Math.PI / 12; // Nghiêng nhẹ
-    roof.castShadow = true;
-    roof.receiveShadow = true;
-    building.add(roof);
+    // === Cây nhỏ ===
+    function createSmallTree() {
+      const trunkGeo = new THREE.CylinderGeometry(0.06, 0.06, 0.4, 6); // Nhân đôi kích thước
+      const trunkMat = new THREE.MeshLambertMaterial({ color: 0x775533 });
+      const trunk = new THREE.Mesh(trunkGeo, trunkMat);
+      trunk.position.y = 0.2; // Nhân đôi từ 0.1
 
-    // Biển hiệu phát sáng
-    const signGeo = new THREE.BoxGeometry(w * 0.7, 1, 0.02);
-    const signMat = new THREE.MeshBasicMaterial({ color: 0xffffaa }); // Ánh sáng vàng
-    const sign = new THREE.Mesh(signGeo, signMat);
-    sign.position.set(0, h + 0.7, d / 2 + 0.031);
-    sign.castShadow = true;
-    sign.receiveShadow = true;
-    building.add(sign);
+      const crownGeo = new THREE.SphereGeometry(0.24, 6, 6); // Nhân đôi từ 0.12
+      const crownMat = new THREE.MeshLambertMaterial({ color: 0x66cc33 });
+      const crown = new THREE.Mesh(crownGeo, crownMat);
+      crown.position.y = 0.5; // Nhân đôi từ 0.25
 
-    building.position.y = h / 2;
-    return building;
-  }
-  createAntenna(height = 2) {
-  const group = new THREE.Group();
-
-  const bottomWidth = 0.6; // khoảng cách giữa chân dưới
-  const topWidth = 0.1;    // khoảng cách giữa chân trên
-  const legSegments = 3;   // số đoạn thanh nối ngang
-  const legRadius = 0.025;
-  const legHeight = height;
-
-  const legMat = new THREE.MeshLambertMaterial({ color: 0x888888 });
-
-  const createLeg = (x1, z1, x2, z2) => {
-    const legGeo = new THREE.CylinderGeometry(legRadius, legRadius, legHeight, 8);
-    const leg = new THREE.Mesh(legGeo, legMat);
-
-    const midX = (x1 + x2) / 2;
-    const midZ = (z1 + z2) / 2;
-    const midY = legHeight / 2;
-
-    leg.position.set(midX, midY, midZ);
-
-    const dx = x2 - x1;
-    const dz = z2 - z1;
-    const len = Math.sqrt(dx * dx + dz * dz + legHeight * legHeight);
-    const angleX = Math.atan2(dz, legHeight);
-    const angleZ = Math.atan2(dx, legHeight);
-
-    // làm nghiêng trụ
-    leg.rotation.z = -angleZ;
-    leg.rotation.x = angleX;
-
-    group.add(leg);
-  };
-
-  // Các chân: 4 điểm từ đáy lên đỉnh
-  const positions = [
-    { bottom: [-bottomWidth/2, -bottomWidth/2], top: [-topWidth/2, -topWidth/2] },
-    { bottom: [ bottomWidth/2, -bottomWidth/2], top: [ topWidth/2, -topWidth/2] },
-    { bottom: [-bottomWidth/2,  bottomWidth/2], top: [-topWidth/2,  topWidth/2] },
-    { bottom: [ bottomWidth/2,  bottomWidth/2], top: [ topWidth/2,  topWidth/2] },
-  ];
-
-  for (const pos of positions) {
-    createLeg(pos.bottom[0], pos.bottom[1], pos.top[0], pos.top[1]);
-  }
-
-  // Các thanh ngang nối ở 3 tầng (dạng hộp vuông)
-  const barMat = new THREE.MeshLambertMaterial({ color: 0x666666 });
-  const barHeightStep = legHeight / (legSegments + 1);
-
-  for (let i = 1; i <= legSegments; i++) {
-    const y = i * barHeightStep;
-
-    const t = y / legHeight;
-    const width = bottomWidth * (1 - t) + topWidth * t;
-
-    const barGeoH = new THREE.BoxGeometry(width, 0.03, 0.03);
-    const barGeoV = new THREE.BoxGeometry(0.03, 0.03, width);
-
-    // 4 cạnh
-    for (let j = 0; j < 4; j++) {
-      const barH = new THREE.Mesh(barGeoH, barMat);
-      const barV = new THREE.Mesh(barGeoV, barMat);
-
-      const offset = width / 2;
-      const sign = j < 2 ? 1 : -1;
-
-      // Horizontal bars
-      barH.position.set(0, y, sign * offset);
-      barV.position.set(sign * offset, y, 0);
-
-      group.add(barH);
-      group.add(barV);
+      const tree = new THREE.Group();
+      tree.add(trunk);
+      tree.add(crown);
+      return tree;
     }
-  }
 
-  // Quả cầu đỏ trên đỉnh
-  const ballGeo = new THREE.SphereGeometry(0.1, 16, 16);
-  const ballMat = new THREE.MeshLambertMaterial({ color: 0xff0000 });
-  const ball = new THREE.Mesh(ballGeo, ballMat);
-  ball.position.y = legHeight + 0.1;
-  group.add(ball);
+    // === Ghế đá ===
+    function createBench() {
+      const bench = new THREE.Group();
 
-  return group;
+      const seatGeo = new THREE.BoxGeometry(0.8, 0.1, 0.2); // Nhân đôi kích thước
+      const legGeo = new THREE.BoxGeometry(0.1, 0.2, 0.1); // Nhân đôi kích thước
+      const mat = new THREE.MeshLambertMaterial({ color: 0x664433 });
+
+      const seat = new THREE.Mesh(seatGeo, mat);
+      seat.position.y = 0.3; // Nhân đôi từ 0.15
+      bench.add(seat);
+
+      const leg1 = new THREE.Mesh(legGeo, mat);
+      leg1.position.set(-0.3, 0.1, -0.06); // Nhân đôi từ -0.15, 0.05, -0.03
+      const leg2 = leg1.clone(); leg2.position.z = 0.06; // Nhân đôi từ 0.03
+      const leg3 = leg1.clone(); leg3.position.x = 0.3; // Nhân đôi từ 0.15
+      const leg4 = leg3.clone(); leg4.position.z = 0.06; // Nhân đôi từ 0.03
+
+      bench.add(leg1, leg2, leg3, leg4);
+      return bench;
+    }
+
+    // === Rải cây nhỏ theo lưới ===
+    const spacingX = w / 4;
+    const spacingZ = d / 4;
+
+    for (let i = -1; i <= 1; i++) {
+      for (let j = -1; j <= 1; j++) {
+        const tree = createSmallTree();
+        tree.position.set(i * spacingX * 0.6 * 2, 0, j * spacingZ * 0.6 * 2); // Nhân đôi khoảng cách
+        park.add(tree);
+      }
+    }
+
+    // === Cây to ở 4 góc ===
+    const bigTreePos = [
+      [-w / 2 + 1.0, -d / 2 + 1.0], // Nhân đôi từ 0.5
+      [w / 2 - 1.0, d / 2 - 1.0],
+      [-w / 2 + 1.0, d / 2 - 1.0],
+      [w / 2 - 1.0, -d / 2 + 1.0]
+    ];
+
+    for (const [x, z] of bigTreePos) {
+      const tree = createBigTree();
+      tree.position.set(x, 0, z);
+      park.add(tree);
+    }
+
+    // === Ghế đá 2 bên đường ===
+    const bench1 = createBench();
+    bench1.position.set(0, 0, d / 2); // Nhân đôi từ d / 4
+    park.add(bench1);
+
+    const bench2 = createBench();
+    bench2.position.set(0, 0, -d / 2); // Nhân đôi từ -d / 4
+    bench2.rotation.y = Math.PI;
+    park.add(bench2);
+
+    // === Tảng đá nhỏ ===
+    const rockGeo = new THREE.DodecahedronGeometry(0.3); // Nhân đôi từ 0.15
+    const rockMat = new THREE.MeshLambertMaterial({ color: 0x999999 });
+    const rock = new THREE.Mesh(rockGeo, rockMat);
+    rock.position.set(-w / 2, 0.3, 0); // Nhân đôi từ -w / 4, 0.15
+    park.add(rock);
+
+    return park;
 }
 
+  createAntenna(height = 2) {
+      const group = new THREE.Group();
 
+      const bottomWidth = 0.6; // khoảng cách giữa chân dưới
+      const topWidth = 0.1;    // khoảng cách giữa chân trên
+      const legSegments = 3;   // số đoạn thanh nối ngang
+      const legRadius = 0.025;
+      const legHeight = height;
 
+      const legMat = new THREE.MeshLambertMaterial({ color: 0x888888 });
+
+      const createLeg = (x1, z1, x2, z2) => {
+        const legGeo = new THREE.CylinderGeometry(legRadius, legRadius, legHeight, 8);
+        const leg = new THREE.Mesh(legGeo, legMat);
+
+        const midX = (x1 + x2) / 2;
+        const midZ = (z1 + z2) / 2;
+        const midY = legHeight / 2;
+
+        leg.position.set(midX, midY, midZ);
+
+        const dx = x2 - x1;
+        const dz = z2 - z1;
+        const len = Math.sqrt(dx * dx + dz * dz + legHeight * legHeight);
+        const angleX = Math.atan2(dz, legHeight);
+        const angleZ = Math.atan2(dx, legHeight);
+
+        // làm nghiêng trụ
+        leg.rotation.z = -angleZ;
+        leg.rotation.x = angleX;
+
+        group.add(leg);
+      };
+
+      // Các chân: 4 điểm từ đáy lên đỉnh
+      const positions = [
+        { bottom: [-bottomWidth/2, -bottomWidth/2], top: [-topWidth/2, -topWidth/2] },
+        { bottom: [ bottomWidth/2, -bottomWidth/2], top: [ topWidth/2, -topWidth/2] },
+        { bottom: [-bottomWidth/2,  bottomWidth/2], top: [-topWidth/2,  topWidth/2] },
+        { bottom: [ bottomWidth/2,  bottomWidth/2], top: [ topWidth/2,  topWidth/2] },
+      ];
+
+      for (const pos of positions) {
+        createLeg(pos.bottom[0], pos.bottom[1], pos.top[0], pos.top[1]);
+      }
+
+      // Các thanh ngang nối ở 3 tầng (dạng hộp vuông)
+      const barMat = new THREE.MeshLambertMaterial({ color: 0x666666 });
+      const barHeightStep = legHeight / (legSegments + 1);
+
+      for (let i = 1; i <= legSegments; i++) {
+        const y = i * barHeightStep;
+
+        const t = y / legHeight;
+        const width = bottomWidth * (1 - t) + topWidth * t;
+
+        const barGeoH = new THREE.BoxGeometry(width, 0.03, 0.03);
+        const barGeoV = new THREE.BoxGeometry(0.03, 0.03, width);
+
+        // 4 cạnh
+        for (let j = 0; j < 4; j++) {
+          const barH = new THREE.Mesh(barGeoH, barMat);
+          const barV = new THREE.Mesh(barGeoV, barMat);
+
+          const offset = width / 2;
+          const sign = j < 2 ? 1 : -1;
+
+          // Horizontal bars
+          barH.position.set(0, y, sign * offset);
+          barV.position.set(sign * offset, y, 0);
+
+          group.add(barH);
+          group.add(barV);
+        }
+      }
+
+      // Quả cầu đỏ trên đỉnh
+      const ballGeo = new THREE.SphereGeometry(0.1, 16, 16);
+      const ballMat = new THREE.MeshLambertMaterial({ color: 0xff0000 });
+      const ball = new THREE.Mesh(ballGeo, ballMat);
+      ball.position.y = legHeight + 0.1;
+      group.add(ball);
+
+      return group;
+  }
 
   createBuilding_5(w, d, h) {
     
@@ -526,6 +599,38 @@ createBuilding_2(w, d, h) {
       win.rotation.y = Math.PI / 2;
       building.add(win);
     }
+// === Cửa chính bên hông trái tầng 1 (to hơn) ===
+      const doorWidth = 1;
+      const doorHeight = floorHeight * 0.9;
+      const doorDepth = 0.02;
+      const sideDoorGeo = new THREE.BoxGeometry(doorWidth, doorHeight, doorDepth);
+      const sideDoorMat = new THREE.MeshLambertMaterial({ color: 0x222222, transparent: true, opacity: 0.9 });
+
+      const sideDoor = new THREE.Mesh(sideDoorGeo, sideDoorMat);
+      sideDoor.position.set(-w / 2 - 0.01, -h / 2 + doorHeight / 2 + 0.01, 0); // sát hông trái
+      sideDoor.rotation.y = Math.PI / 2;
+      building.add(sideDoor);
+
+      // === Mái che chéo cho cửa chính bên hông ===
+      // Tạo hình mái che hình tam giác nghiêng bằng Box và xoay
+      const awningLength = doorWidth + 0.4;
+      const awningThickness = 0.05;
+      const awningWidth = 0.3;
+
+      const awningGeo = new THREE.BoxGeometry(awningThickness, awningWidth, awningLength);
+      const awningMat = new THREE.MeshLambertMaterial({ color: 0x666666 });
+
+      const awning = new THREE.Mesh(awningGeo, awningMat);
+
+      // đặt mái che nghiêng xuống
+      awning.rotation.z = -Math.PI / 4;
+      awning.position.set(
+        -w / 2 - 0.05,
+        -h / 2 + doorHeight + awningWidth / 2,
+        0
+      );
+      building.add(awning);
+
 
     // === Mái nhà chính ===
     const roofGeo = new THREE.BoxGeometry(w + 0.2, 0.1, d + 0.2);
@@ -557,7 +662,6 @@ createBuilding_2(w, d, h) {
     building.position.y = h / 2;
     return building;
   }
-
 
  createBuilding_6(w, d, h) {
     const building = new THREE.Group();
@@ -621,12 +725,12 @@ createBuilding_2(w, d, h) {
     return building;
   }
 
-  createBuildings() {
+createBuildings() {
     this.sideBuildings = [];
 
     const spacing = 7;
     const roadSegmentCount = 3;
-    const buildingCountPerSegment = this.roadLength / spacing -1 ;
+    const buildingCountPerSegment = this.roadLength / spacing - 1;
 
     const minHeight = 4, maxHeight = 10;
     const minSize = 3, maxSize = 7;
@@ -646,41 +750,38 @@ createBuilding_2(w, d, h) {
         const h = THREE.MathUtils.randFloat(minHeight, maxHeight);
         const id = THREE.MathUtils.randInt(1, 6); // chọn mẫu tòa nhà từ 1 -> 6
 
-        const left = this.createBuildingById(1, 6, 6, h);
+        const left = this.createBuildingById(1, w, d, h);
         left.receiveShadow = true;
         left.castShadow = true;
-        left.position.set(leftOffset, 0, zPos);
+        left.position.set(leftOffset, -0.1, zPos);
+        left.rotation.y = Math.PI / 2;
         this.scene.add(left);
         segmentBuildings.push(left);
 
-        const right = this.createBuildingById(id, 6, 6, h);
+        const right = this.createBuildingById(id, w, d, h);
         right.receiveShadow = true;
         right.castShadow = true;
-        if (id === 1 || id === 6) {
-          right.position.set(rightOffset, 0, zPos);
-          right.rotation.y = -Math.PI / 2;
-        }
-        else right.position.set(rightOffset, h / 2, zPos);
-        
+        right.position.set(rightOffset, -0.1, zPos);
+        right.rotation.y = -Math.PI / 2;
         this.scene.add(right);
         segmentBuildings.push(right);
       }
 
       this.sideBuildings.push(segmentBuildings);
     }
-  }
+}
 
-  createBuildingById(id, w, d, h) {
+createBuildingById(id, w, d, h) {
     switch (id) {
       case 1: return this.createBuilding_1(w, d, h);
       case 2: return this.createBuilding_2(w, h);
       case 3: return this.createBuilding_3(w, h);
-      case 4: return this.createBuilding_4(w, h);
+      case 4: return this.createBuilding_4(w, d, h); // Đảm bảo truyền đúng tham số
       case 5: return this.createBuilding_5(w, d, h);
       case 6: return this.createBuilding_6(w, d, h);
       default: return this.createBuilding_1(w, d, h); // fallback
     }
-  }
+}
 
   update(delta, speed) {
     // Move road segments
