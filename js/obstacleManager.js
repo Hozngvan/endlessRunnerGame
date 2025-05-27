@@ -55,8 +55,8 @@ export class ObstacleManager {
       const normalMap = loader.load('textures/concrete_diffus.jpg');
 
       const material = new THREE.MeshStandardMaterial({
-        map: texture,
-        normalMap: normalMap,
+        //map: texture,
+        //normalMap: normalMap,
         metalness: 0.2,
         roughness: 0.8,
       });
@@ -67,7 +67,7 @@ export class ObstacleManager {
       obstacle.castShadow = true;
       obstacle.receiveShadow = true;
     } else if (type === 'fence') {
-      const geometry = new THREE.BoxGeometry(4, 0.5, 1);
+      const geometry = new THREE.BoxGeometry(4, 1, 1);
       const material = new THREE.MeshStandardMaterial({
         color: 0x8B4513,
         metalness: 0.1,
@@ -104,16 +104,37 @@ export class ObstacleManager {
       emissiveIntensity: 0.2
     });
 
-    const coin = new THREE.Mesh(geometry, material);
-    coin.position.set(lane, 1.5, z);
-    coin.rotation.y = Math.PI / 2;
-    coin.castShadow = true;
-    coin.receiveShadow = true;
-    coin.objectType = 'coin'; // Đánh dấu là coin
+    const torus = new THREE.Mesh(geometry, material);
+    torus.rotation.y = Math.PI / 2;
 
-    this.scene.add(coin);
-    this.objects.push(coin);
-    return coin;
+    // Cylinder - lõi đen tạo cảm giác đục
+    const holeGeometry = new THREE.CylinderGeometry(0.6, 0.6 , 0.05, 32);
+    const bitcoin = new THREE.TextureLoader().load('textures/img/bitcoin.jpg');
+    const holeMaterial = new THREE.MeshStandardMaterial({ 
+      //map: bitcoin,
+      color: 0xFFD700,
+      side: THREE.DoubleSide
+    });
+
+    const hole = new THREE.Mesh(holeGeometry, holeMaterial);
+    hole.rotation.z = -Math.PI / 2;
+    // hole.rotation.y = Math.PI / 2;
+
+    // Tạo group đồng xu
+    const coinGroup = new THREE.Group();
+    coinGroup.add(torus);
+    coinGroup.add(hole);
+
+    // Đặt vị trí
+    coinGroup.position.set(lane, 1.5, z);
+    coinGroup.castShadow = true;
+    coinGroup.receiveShadow = true;
+    coinGroup.objectType = 'coin';
+
+    this.scene.add(coinGroup);
+    this.objects.push(coinGroup);
+
+    return coinGroup;
   }
 
   spawnRandomObstacle(z = this.spawnDistance) {

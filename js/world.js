@@ -114,7 +114,7 @@ export class World {
     const gach = loader.load('textures/img/gach.jpg');
     const longSideGeometry = new THREE.BoxGeometry(0.3, 0.3, 2.5); // mỗi đoạn dài 2 đơn vị
     const longSideMaterial = new THREE.MeshBasicMaterial({ 
-      map: gach,
+      //map: gach,
       
     });
 
@@ -198,7 +198,7 @@ export class World {
     const signGeometry = new THREE.BoxGeometry(w * 0.8, 1.2, 0.02);
     const textureLoader = new THREE.TextureLoader();
     const texture = textureLoader.load('textures/img/pepsi.jpg', () => {
-      sign.material.map = texture;
+      //sign.material.map = texture;
       sign.material.needsUpdate = true;
     });
     const signMaterial = new THREE.MeshLambertMaterial({ color: 0xFFFFFF });
