@@ -104,7 +104,7 @@ export class ObstacleManager {
       obstacle.add(pointLight2);
       
       // // Tạo hình nón ánh sáng giả lập
-      // const coneGeometry = new THREE.ConeGeometry(1, 4, 32, 1, true); // bán kính, chiều cao
+      // const coneGeometry = new THREE.ConeGeometry(0.8, 1, 32, 1, true); // bán kính, chiều cao
       // const coneMaterial = new THREE.MeshBasicMaterial({
       //   color: 0xffff00,
       //   transparent: true,
@@ -116,7 +116,7 @@ export class ObstacleManager {
 
       // // Đặt vị trí gốc giống spotLight
       // lightCone.position.copy(light.position);
-      // lightCone.position.z = 4;
+      // lightCone.position.z = 3;
 
       // // Xoay hình nón hướng về phía trước (trục Z)
       // lightCone.rotation.x = -Math.PI / 2;
@@ -126,33 +126,114 @@ export class ObstacleManager {
 
       // const lightCone2 = lightCone.clone();
       // lightCone2.position.copy(light2.position);
-      // lightCone2.position.z = 4;
+      // lightCone2.position.z = 3 ;
 
       // obstacle.add(lightCone2);
 
       // Đặt vị trí
       obstacle.position.set(lane, 1.5, z);
       //obstacle.rotation.y = Math.PI / 2;
-      obstacle.type = 'block';
+      obstacle.type = 'barrier';
 
     } else if (type === 'block') {
-      const geometry = new THREE.BoxGeometry(3, 3, 1);
-      const texture = loader.load('textures/concrete_diffuse.jpg');
-      const normalMap = loader.load('textures/concrete_diffus.jpg');
 
-      const material = new THREE.MeshStandardMaterial({
-        //map: texture,
-        //normalMap: normalMap,
-        metalness: 0.2,
-        roughness: 0.8,
-      });
+      // === 1. TẠO THÂN XE ===
+      const busBody = new THREE.Mesh(
+        new THREE.BoxGeometry(3, 3, 8),
+        new THREE.MeshStandardMaterial({ color: 0xb22222 }) // màu đỏ đậm
+      );
+      busBody.position.y = 0.3; // nâng lên khỏi mặt đất
 
-      obstacle = new THREE.Mesh(geometry, material);
+      // === 2. TẠO MÁI XE ===
+      const busRoof = new THREE.Mesh(
+        new THREE.BoxGeometry(2, 0.2, 6),
+        new THREE.MeshStandardMaterial({ color: 0xff6666 }) // đỏ nhạt
+      );
+      busRoof.position.set(0, 1.8, 0);
+
+      // === 3. CỬA SỔ ===
+      const windows = [];
+      for (let i = -3; i <= 3; i += 2) {
+        const win = new THREE.Mesh(
+          new THREE.BoxGeometry(0.05, 1, 1.4),
+          new THREE.MeshStandardMaterial({ color: 0x000000 })
+        );
+        win.position.set(-1.5, 1, i); // bên phải xe
+        windows.push(win);
+
+        const win2 = new THREE.Mesh(
+          new THREE.BoxGeometry(0.05, 1, 1.4),
+          new THREE.MeshStandardMaterial({ color: 0x000000 })
+        );
+        win2.position.set(1.5, 1, i); // bên trái xe
+        windows.push(win2);
+      }
+
+      // === 4. BÁNH XE ===
+      function createWheel(x, z) {
+        const wheel = new THREE.Mesh(
+          new THREE.CylinderGeometry(0.5, 0.5, 0.5, 32),
+          new THREE.MeshStandardMaterial({ color: 0x333333 })
+        );
+        wheel.rotation.z = Math.PI / 2;
+        wheel.position.set(x, -1, z);
+        return wheel;
+      }
+      const wheel1 = createWheel(-1.5, 2.7);
+      const wheel2 = createWheel(1.5, 2.7);
+      const wheel3 = createWheel(-1.5, -2.7);
+      const wheel4 = createWheel(1.5, -2.7);
+
+      // === 5. KÍNH XE ===
+      const glass = new THREE.Mesh(
+        new THREE.BoxGeometry(2.6, 1, 0.2),
+        new THREE.MeshStandardMaterial({
+          color: 0x666666,         // Màu nhẹ xám hoặc xanh lam nhạt
+          metalness: 0.25,         // Kim loại thấp (kính không phải kim loại)
+          roughness: 0.05,         // Rất mịn để phản chiếu tốt
+          transparent: true,       // Cho phép trong suốt
+          opacity: 0.8,            // Mức độ trong suốt
+          envMapIntensity: 1.0,    // Cường độ phản chiếu môi trường (nếu dùng env map)
+          side: THREE.DoubleSide   // Đảm bảo nhìn thấy cả 2 mặt kính
+        })
+      );
+      glass.position.set(0, 1, 4);
+
+      // === 6. ĐÈN XE ===
+      const light = new THREE.Mesh(
+        new THREE.SphereGeometry(0.2, 32, 32),
+        new THREE.MeshStandardMaterial({ color: 0xffffff })
+      );
+      light.position.set(-0.9, -0.7, 4);
+
+      const light2 = light.clone();
+      light2.position.set(0.9, -0.7, 4);
+
+      // PointLights
+      const pointLight = new THREE.PointLight(0xffff00, 2, 10);
+      pointLight.position.copy(light.position);
+      pointLight.position.z = 4.2;
+
+      const pointLight2 = new THREE.PointLight(0xffff00, 2, 10);
+      pointLight2.position.copy(light2.position);
+      pointLight2.position.z = 4.2;
+
+      // === 7. VÀNH XE ===
+      const vanh = new THREE.Mesh(
+        new THREE.BoxGeometry(3.1, 0.6, 8.1),
+        new THREE.MeshStandardMaterial({ color: 0xffffff })
+      );
+      vanh.position.set(0, 0.04, 0);
+
+      // === 5. GỘP CÁC PHẦN ===
+      obstacle = new THREE.Group();
+      obstacle.add(busBody, busRoof, ...windows, wheel1, wheel2, wheel3, wheel4, glass, light, light2, pointLight, pointLight2, vanh);
+
+      // Đặt vị trí
       obstacle.position.set(lane, 1.5, z);
+      //obstacle.rotation.y = Math.PI / 2;
       obstacle.type = 'block';
-      obstacle.castShadow = true;
-      obstacle.receiveShadow = true;
-
+    
     } else if (type === 'fence') {
       const geometry = new THREE.BoxGeometry(4, 1, 1);
       const material = new THREE.MeshStandardMaterial({
@@ -196,7 +277,7 @@ export class ObstacleManager {
 
     // Cylinder - lõi đen tạo cảm giác đục
     const holeGeometry = new THREE.CylinderGeometry(0.6, 0.6 , 0.05, 32);
-    const bitcoin = new THREE.TextureLoader().load('textures/img/bitcoin.jpg');
+    //const bitcoin = new THREE.TextureLoader().load('textures/img/bitcoin.jpg');
     const holeMaterial = new THREE.MeshStandardMaterial({ 
       //map: bitcoin,
       color: 0xFFD700,
