@@ -109,13 +109,80 @@ export class World {
       this.crosswalkLines.push({ mesh: line, baseZ: segmentEndZ });
     }
 
+    // Add traffic lights
+    this.trafficLights = [];
+    const poleHeight = 5; 
+    const poleRadius = 0.1; 
+    const horizontalLength = 2; 
+    const lightBoxSize = {width: 1.6, height: 0.6, depth: 0.3};
+    const lightRadius = 0.15; 
+
+    const redMaterial = new THREE.MeshStandardMaterial({ color: 0xff0000, emissive: 0xff0000 });
+    const yellowMaterial = new THREE.MeshStandardMaterial({ color: 0xffff00, emissive: 0xffff00 });
+    const greenMaterial = new THREE.MeshStandardMaterial({ color: 0x00ff00, emissive: 0x00ff00 });
+
+    const x = this.roadWidth / 2 + 0.2;
+
+    //const trafficLightGroup = new THREE.Group();
+
+    // Trụ đứng
+    const tru = new THREE.Mesh(
+      new THREE.CylinderGeometry(poleRadius, poleRadius, poleHeight, 32),
+      new THREE.MeshLambertMaterial({ color: 0x828282 })
+    );
+    tru.position.set(x, poleHeight / 2 , 3);
+    this.scene.add(tru);
+    this.trafficLights.push({mesh: tru, baseZ: segmentEndZ});
+
+    // Trụ ngang
+    const horizontal = new THREE.Mesh(
+      new THREE.BoxGeometry(horizontalLength, poleRadius, poleRadius),
+      new THREE.MeshLambertMaterial({ color: 0x828282 })
+    );
+    horizontal.position.set(x-1, poleHeight - 0.5, 3);
+    this.scene.add(horizontal);
+    this.trafficLights.push({mesh: horizontal, baseZ: segmentEndZ});
+    
+    // Hộp đèn  
+    const box = new THREE.Mesh(
+      new THREE.BoxGeometry(lightBoxSize.width, lightBoxSize.height, lightBoxSize.depth),
+      new THREE.MeshLambertMaterial({ color: 0x828282 })
+    );
+    box.position.set(x-2, poleHeight - 0.5, 3);
+    this.scene.add(box);
+    this.trafficLights.push({mesh: box, baseZ: segmentEndZ});
+
+    // 3 đèn đỏ vàng xanh 
+    const redLight = new THREE.Mesh(
+      new THREE.SphereGeometry(0.2, 32, 32),
+      new THREE.MeshLambertMaterial({ color: 0xff0000 })
+    );
+    redLight.position.set(x-2.5, poleHeight - 0.5, 3);
+    this.scene.add(redLight);
+    this.trafficLights.push({mesh: redLight, baseZ: segmentEndZ});
+
+    const yellowLight = new THREE.Mesh(
+      new THREE.SphereGeometry(0.2, 32, 32),
+      new THREE.MeshLambertMaterial({ color: 0xffff00 })
+    );
+    yellowLight.position.set(x-2, poleHeight - 0.5, 3);
+    this.scene.add(yellowLight);
+    this.trafficLights.push({mesh: yellowLight, baseZ: segmentEndZ});
+
+    const greenLight = new THREE.Mesh(
+      new THREE.SphereGeometry(0.2, 32, 32),
+      new THREE.MeshLambertMaterial({ color: 0x00ff00 })
+    );
+    greenLight.position.set(x-1.5, poleHeight - 0.5, 3);
+    this.scene.add(greenLight);
+    this.trafficLights.push({mesh: greenLight, baseZ: segmentEndZ});
+
     // Add sidelines
     this.longSidelines = [];
     const gach = loader.load('textures/img/gach.jpg');
     const longSideGeometry = new THREE.BoxGeometry(0.3, 0.3, 2.5); // mỗi đoạn dài 2 đơn vị
     const longSideMaterial = new THREE.MeshBasicMaterial({ 
       //map: gach,
-      
     });
 
     const sidePositions = [-7.5, 7.5]; // hai bên mép đường
@@ -599,37 +666,38 @@ createBuilding_2(w, d, h) {
       win.rotation.y = Math.PI / 2;
       building.add(win);
     }
-// === Cửa chính bên hông trái tầng 1 (to hơn) ===
-      const doorWidth = 1;
-      const doorHeight = floorHeight * 0.9;
-      const doorDepth = 0.02;
-      const sideDoorGeo = new THREE.BoxGeometry(doorWidth, doorHeight, doorDepth);
-      const sideDoorMat = new THREE.MeshLambertMaterial({ color: 0x222222, transparent: true, opacity: 0.9 });
 
-      const sideDoor = new THREE.Mesh(sideDoorGeo, sideDoorMat);
-      sideDoor.position.set(-w / 2 - 0.01, -h / 2 + doorHeight / 2 + 0.01, 0); // sát hông trái
-      sideDoor.rotation.y = Math.PI / 2;
-      building.add(sideDoor);
+    // === Cửa chính bên hông trái tầng 1 (to hơn) ===
+    const doorWidth = 1;
+    const doorHeight = floorHeight * 0.9;
+    const doorDepth = 0.02;
+    const sideDoorGeo = new THREE.BoxGeometry(doorWidth, doorHeight, doorDepth);
+    const sideDoorMat = new THREE.MeshLambertMaterial({ color: 0x222222, transparent: true, opacity: 0.9 });
 
-      // === Mái che chéo cho cửa chính bên hông ===
-      // Tạo hình mái che hình tam giác nghiêng bằng Box và xoay
-      const awningLength = doorWidth + 0.4;
-      const awningThickness = 0.05;
-      const awningWidth = 0.3;
+    const sideDoor = new THREE.Mesh(sideDoorGeo, sideDoorMat);
+    sideDoor.position.set(-w / 2 - 0.01, -h / 2 + doorHeight / 2 + 0.01, 0); // sát hông trái
+    sideDoor.rotation.y = Math.PI / 2;
+    building.add(sideDoor);
 
-      const awningGeo = new THREE.BoxGeometry(awningThickness, awningWidth, awningLength);
-      const awningMat = new THREE.MeshLambertMaterial({ color: 0x666666 });
+    // === Mái che chéo cho cửa chính bên hông ===
+    // Tạo hình mái che hình tam giác nghiêng bằng Box và xoay
+    const awningLength = doorWidth + 0.4;
+    const awningThickness = 0.05;
+    const awningWidth = 0.3;
 
-      const awning = new THREE.Mesh(awningGeo, awningMat);
+    const awningGeo = new THREE.BoxGeometry(awningThickness, awningWidth, awningLength);
+    const awningMat = new THREE.MeshLambertMaterial({ color: 0x666666 });
 
-      // đặt mái che nghiêng xuống
-      awning.rotation.z = -Math.PI / 4;
-      awning.position.set(
-        -w / 2 - 0.05,
-        -h / 2 + doorHeight + awningWidth / 2,
-        0
-      );
-      building.add(awning);
+    const awning = new THREE.Mesh(awningGeo, awningMat);
+
+    // đặt mái che nghiêng xuống
+    awning.rotation.z = -Math.PI / 4;
+    awning.position.set(
+      -w / 2 - 0.05,
+      -h / 2 + doorHeight + awningWidth / 2,
+      0
+    );
+    building.add(awning);
 
 
     // === Mái nhà chính ===
@@ -725,7 +793,7 @@ createBuilding_2(w, d, h) {
     return building;
   }
 
-createBuildings() {
+  createBuildings() {
     this.sideBuildings = [];
 
     const spacing = 7;
@@ -769,9 +837,9 @@ createBuildings() {
 
       this.sideBuildings.push(segmentBuildings);
     }
-}
+  }
 
-createBuildingById(id, w, d, h) {
+  createBuildingById(id, w, d, h) {
     switch (id) {
       case 1: return this.createBuilding_1(w, d, h);
       case 2: return this.createBuilding_2(w, h);
@@ -781,7 +849,7 @@ createBuildingById(id, w, d, h) {
       case 6: return this.createBuilding_6(w, d, h);
       default: return this.createBuilding_1(w, d, h); // fallback
     }
-}
+  }
 
   update(delta, speed) {
     // Move road segments
@@ -793,7 +861,7 @@ createBuildingById(id, w, d, h) {
         segment.position.z -= this.roadLength * this.roadSegments.length;
       }
     }
-    
+  
     // Move lane lines
     for (const line of this.laneLines) {
       line.mesh.position.z += speed * delta;
@@ -827,6 +895,16 @@ createBuildingById(id, w, d, h) {
       }
     }
 
+    // Move traffic lights
+    for (const trafficlight of this.trafficLights) {
+      trafficlight.mesh.position.z += speed * delta;
+      
+      // Reset position if beyond camera
+      if (trafficlight.mesh.position.z > this.roadLength / 1.5) {
+        trafficlight.mesh.position.z = -100;
+      }
+    }
+
     // Move long sideLines 
     for (const line of this.longSidelines) {
       line.position.z += speed * delta;
@@ -849,7 +927,7 @@ createBuildingById(id, w, d, h) {
         }
       }
     }
-}
+  }
   
   reset() {
     // Reset road segment positions
