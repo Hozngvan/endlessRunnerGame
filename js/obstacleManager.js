@@ -235,20 +235,40 @@ export class ObstacleManager {
       obstacle.type = 'block';
     
     } else if (type === 'fence') {
-      const geometry = new THREE.BoxGeometry(4, 1, 1);
+      obstacle = new THREE.Group();
+
+      //const texture = new THREE.TextureLoader().load('textures/imgepsi.jpg');
+      // Rào chán trên
+      const geometry = new THREE.BoxGeometry(3.6, 2, 0.4);
       const material = new THREE.MeshStandardMaterial({
-        color: 0x8B4513,
+        //map: texture,
+        color: 0x0000aa,
         metalness: 0.1,
         roughness: 0.5,
         emissive: 0x000000,
         emissiveIntensity: 0.05
       });
 
-      obstacle = new THREE.Mesh(geometry, material);
-      obstacle.position.set(lane, 2, z);
+      const fence = new THREE.Mesh(geometry, material);
+      fence.position.set(0, 1.5, 0);
+      obstacle.add(fence);
+
+      // 2 cột 2 bên
+      const geometry2 = new THREE.BoxGeometry(0.2, 2, 0.2);
+      const material2 = new THREE.MeshStandardMaterial({
+        color: 0x000000,
+      });
+
+      const column1 = new THREE.Mesh(geometry2, material2);
+      column1.position.set(-1.65, 0, 0);
+      obstacle.add(column1);
+
+      const column2 = column1.clone();
+      column2.position.set(1.65, 0, 0);
+      obstacle.add(column2);
+
+      obstacle.position.set(lane, 1.5, z);
       obstacle.type = 'fence';
-      obstacle.castShadow = true;
-      obstacle.receiveShadow = true;
     }
 
     obstacle.objectType = 'obstacle'; // Đánh dấu là obstacle
@@ -390,7 +410,15 @@ export class ObstacleManager {
   update(delta, speed) {
     for (let i = this.objects.length - 1; i >= 0; i--) {
       const obj = this.objects[i];
-      obj.position.z += speed * delta;
+      if (obj.type === 'block') {
+        obj.position.z += speed * delta * 1.8;
+      }
+      else if (obj.type === 'barrier') {
+        obj.position.z += speed * delta * 1.4;
+      }
+      else {
+        obj.position.z += speed * delta;
+      }
 
       // Xử lý riêng cho từng loại object
       if (obj.objectType === 'coin') {
@@ -420,17 +448,20 @@ export class ObstacleManager {
     );
 
     for (const obj of this.objects) {
-      if (obj.objectType !== 'obstacle' || obj.position.z < -1 || obj.position.z > 1) {
+      if (obj.objectType !== 'obstacle' || obj.position.z < -4 || obj.position.z > 4) {
         continue;
       }
 
       const obstacleBoundingBox = new THREE.Box3().setFromObject(obj);
-      const center = new THREE.Vector3();
-      const size = new THREE.Vector3();
-      obstacleBoundingBox.getCenter(center);
-      obstacleBoundingBox.getSize(size);
-      size.subScalar(0.5);
-      obstacleBoundingBox.setFromCenterAndSize(center, size);
+      if (obj.type === 'fence') {
+        obstacleBoundingBox.min.y = 1.6;
+      }
+      // const center = new THREE.Vector3();
+      // const size = new THREE.Vector3();
+      // obstacleBoundingBox.getCenter(center);
+      // obstacleBoundingBox.getSize(size);
+      // //size.subScalar(0.5);
+      // obstacleBoundingBox.setFromCenterAndSize(center, size);
 
       if (playerBoundingBox.intersectsBox(obstacleBoundingBox)) {
         if (isJumping && obj.type === 'barrier') {
