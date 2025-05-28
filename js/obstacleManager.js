@@ -37,25 +37,10 @@ export class ObstacleManager {
     }
 
     if (type === 'barrier') {
-      // const warningColors = [0xff0000, 0xffa500, 0xffff00, 0xffffff];
-      // const color = warningColors[Math.floor(Math.random() * warningColors.length)];
-  
-      // const geometry = new THREE.BoxGeometry(3, 1, 0.5);
-      // const material = new THREE.MeshStandardMaterial({
-      //   color: color,
-      //   metalness: 0.3,
-      //   roughness: 0.5,
-      //   emissive: 0x000000,
-      //   emissiveIntensity: 0.05
-      // });
-  
-      // obstacle = new THREE.Mesh(geometry, material);
-      // obstacle.position.set(lane, 0.5, z);
-      // obstacle.type = 'barrier';
-      // obstacle.castShadow = true;
-      // obstacle.receiveShadow = true;
-      // obstacle.rotation.y = (Math.random() - 0.5) * 0.1;
+      // Group obstacle
       obstacle = new THREE.Group();
+
+      // Wheels
       const backWheel = createWheels(); 
       backWheel.position.y = -1; 
       backWheel.position.z = 1; 
@@ -66,6 +51,7 @@ export class ObstacleManager {
       frontWheel.position.z = -1; 
       obstacle.add(frontWheel);
 
+      // Main body car
       const main = new THREE.Mesh(
         new THREE.BoxGeometry(2, 0.8, 4),
         new THREE.MeshLambertMaterial({color: 0x78b14b})
@@ -73,6 +59,7 @@ export class ObstacleManager {
       main.position.y = -0.6; 
       obstacle.add(main);
 
+      // Cabin 
       const cabin = new THREE.Mesh(
         new THREE.BoxGeometry(1.4, 0.8, 2.4),
         new THREE.MeshLambertMaterial({color: 0xffffff})
@@ -82,6 +69,7 @@ export class ObstacleManager {
       cabin.position.z = -0.7;
       obstacle.add(cabin);
 
+      // Biển số xe
       const bienso = new THREE.Mesh(
         new THREE.BoxGeometry(1, 0.4, 0.2),
         new THREE.MeshLambertMaterial({color: 0xffffff})
@@ -89,6 +77,60 @@ export class ObstacleManager {
       bienso.position.set(0, -0.7, 2);
       obstacle.add(bienso);
 
+      // Đèn xe
+      const light = new THREE.Mesh(
+        new THREE.SphereGeometry(0.12, 32, 32),
+        new THREE.MeshLambertMaterial({color: 0xaaaaaa})
+      );
+
+      light.position.set(-0.75, -0.7, 1.95);
+      obstacle.add(light);
+
+      const light2 = new THREE.Mesh(
+        new THREE.SphereGeometry(0.12, 32, 32),
+        new THREE.MeshLambertMaterial({color: 0xaaaaaa})
+      );
+
+      light2.position.set(0.75, -0.7, 1.95);
+      obstacle.add(light2);
+
+      // PointLights
+      const pointLight = new THREE.PointLight(0xffff00, 1.7, 10);
+      pointLight.position.copy(light.position);
+      obstacle.add(pointLight);
+
+      const pointLight2 = new THREE.PointLight(0xffff00, 1.7, 10);
+      pointLight2.position.copy(light2.position);
+      obstacle.add(pointLight2);
+      
+      // // Tạo hình nón ánh sáng giả lập
+      // const coneGeometry = new THREE.ConeGeometry(1, 4, 32, 1, true); // bán kính, chiều cao
+      // const coneMaterial = new THREE.MeshBasicMaterial({
+      //   color: 0xffff00,
+      //   transparent: true,
+      //   opacity: 0.2,
+      //   side: THREE.DoubleSide, // hiển thị cả mặt trong
+      //   depthWrite: false // không ảnh hưởng bóng đổ
+      // });
+      // const lightCone = new THREE.Mesh(coneGeometry, coneMaterial);
+
+      // // Đặt vị trí gốc giống spotLight
+      // lightCone.position.copy(light.position);
+      // lightCone.position.z = 4;
+
+      // // Xoay hình nón hướng về phía trước (trục Z)
+      // lightCone.rotation.x = -Math.PI / 2;
+
+      // // Gắn vào obstacle hoặc scene
+      // obstacle.add(lightCone);
+
+      // const lightCone2 = lightCone.clone();
+      // lightCone2.position.copy(light2.position);
+      // lightCone2.position.z = 4;
+
+      // obstacle.add(lightCone2);
+
+      // Đặt vị trí
       obstacle.position.set(lane, 1.5, z);
       //obstacle.rotation.y = Math.PI / 2;
       obstacle.type = 'block';
