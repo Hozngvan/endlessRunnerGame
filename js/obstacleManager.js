@@ -411,10 +411,10 @@ export class ObstacleManager {
     for (let i = this.objects.length - 1; i >= 0; i--) {
       const obj = this.objects[i];
       if (obj.type === 'block') {
-        obj.position.z += speed * delta * 1.8;
+        obj.position.z += speed * delta * 1.4;
       }
       else if (obj.type === 'barrier') {
-        obj.position.z += speed * delta * 1.4;
+        obj.position.z += speed * delta * 1.2;
       }
       else {
         obj.position.z += speed * delta;
@@ -448,7 +448,7 @@ export class ObstacleManager {
     );
 
     for (const obj of this.objects) {
-      if (obj.objectType !== 'obstacle' || obj.position.z < -4 || obj.position.z > 4) {
+      if (obj.objectType !== 'obstacle' || obj.position.z < -3 || obj.position.z  > 3) {
         continue;
       }
 
