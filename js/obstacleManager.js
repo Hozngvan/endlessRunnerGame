@@ -29,25 +29,69 @@ export class ObstacleManager {
 
     const loader = new THREE.TextureLoader();
 
+    function createWheels() {
+      const geometry = new THREE.BoxGeometry(2.1, 0.6, 1); 
+      const material = new THREE.MeshLambertMaterial({color: 0x333333});
+      const wheel = new THREE.Mesh(geometry, material); 
+      return wheel;
+    }
+
     if (type === 'barrier') {
-      const warningColors = [0xff0000, 0xffa500, 0xffff00, 0xffffff];
-      const color = warningColors[Math.floor(Math.random() * warningColors.length)];
+      // const warningColors = [0xff0000, 0xffa500, 0xffff00, 0xffffff];
+      // const color = warningColors[Math.floor(Math.random() * warningColors.length)];
   
-      const geometry = new THREE.BoxGeometry(3, 1, 0.5);
-      const material = new THREE.MeshStandardMaterial({
-        color: color,
-        metalness: 0.3,
-        roughness: 0.5,
-        emissive: 0x000000,
-        emissiveIntensity: 0.05
-      });
+      // const geometry = new THREE.BoxGeometry(3, 1, 0.5);
+      // const material = new THREE.MeshStandardMaterial({
+      //   color: color,
+      //   metalness: 0.3,
+      //   roughness: 0.5,
+      //   emissive: 0x000000,
+      //   emissiveIntensity: 0.05
+      // });
   
-      obstacle = new THREE.Mesh(geometry, material);
-      obstacle.position.set(lane, 0.5, z);
-      obstacle.type = 'barrier';
-      obstacle.castShadow = true;
-      obstacle.receiveShadow = true;
-      obstacle.rotation.y = (Math.random() - 0.5) * 0.1;
+      // obstacle = new THREE.Mesh(geometry, material);
+      // obstacle.position.set(lane, 0.5, z);
+      // obstacle.type = 'barrier';
+      // obstacle.castShadow = true;
+      // obstacle.receiveShadow = true;
+      // obstacle.rotation.y = (Math.random() - 0.5) * 0.1;
+      obstacle = new THREE.Group();
+      const backWheel = createWheels(); 
+      backWheel.position.y = -1; 
+      backWheel.position.z = 1; 
+      obstacle.add(backWheel);
+
+      const frontWheel = createWheels(); 
+      frontWheel.position.y = -1; 
+      frontWheel.position.z = -1; 
+      obstacle.add(frontWheel);
+
+      const main = new THREE.Mesh(
+        new THREE.BoxGeometry(2, 0.8, 4),
+        new THREE.MeshLambertMaterial({color: 0x78b14b})
+      );
+      main.position.y = -0.6; 
+      obstacle.add(main);
+
+      const cabin = new THREE.Mesh(
+        new THREE.BoxGeometry(1.4, 0.8, 2.4),
+        new THREE.MeshLambertMaterial({color: 0xffffff})
+      );
+      cabin.position.x = 0; 
+      cabin.position.y = -0.2;
+      cabin.position.z = -0.7;
+      obstacle.add(cabin);
+
+      const bienso = new THREE.Mesh(
+        new THREE.BoxGeometry(1, 0.4, 0.2),
+        new THREE.MeshLambertMaterial({color: 0xffffff})
+      );
+      bienso.position.set(0, -0.7, 2);
+      obstacle.add(bienso);
+
+      obstacle.position.set(lane, 1.5, z);
+      //obstacle.rotation.y = Math.PI / 2;
+      obstacle.type = 'block';
 
     } else if (type === 'block') {
       const geometry = new THREE.BoxGeometry(3, 3, 1);
@@ -66,6 +110,7 @@ export class ObstacleManager {
       obstacle.type = 'block';
       obstacle.castShadow = true;
       obstacle.receiveShadow = true;
+
     } else if (type === 'fence') {
       const geometry = new THREE.BoxGeometry(4, 1, 1);
       const material = new THREE.MeshStandardMaterial({
