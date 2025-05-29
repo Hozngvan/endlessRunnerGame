@@ -18,7 +18,7 @@ export class ObstacleManager {
     this.reset();
     
     // Create initial objects
-    for (let i = 0; i < 20; i++) {
+    for (let i = 0; i < 10; i++) {
       this.spawnRandomObstacle(-30 - i * 10);
       this.spawnCoin(-25 - i * 20);
     }
@@ -515,7 +515,7 @@ export class ObstacleManager {
     this.objects.forEach(obj => this.scene.remove(obj));
     this.objects = [];
     
-    for (let i = 0; i < 20; i++) {
+    for (let i = 0; i < 10; i++) {
       this.spawnRandomObstacle(-30 - i * 10);
       this.spawnCoin(-25 - i * 20);
     }
