@@ -21,6 +21,53 @@ export class Game {
     this.minScoreToUpdate = 0; // Điểm tối thiểu để cập nhật top 5
     this.isNight = false;
     this.lastLightingMilestone = 0;
+    this.FirstCamera = false; 
+    this.cameraTransition = {
+      inProgress: false,
+      start: new THREE.Vector3(),
+      end: new THREE.Vector3(),
+      lookAt: new THREE.Vector3(0, 0, 0),
+      progress: 0,
+      duration: 1.0 // thời gian chuyển cảnh, đơn vị giây
+    };
+
+    window.addEventListener("keydown", (event) => {
+      if (event.key === "c" || event.key === "C") {
+        this.FirstCamera = !this.FirstCamera;
+        console.log("FirstCamera is now:", this.FirstCamera);
+
+        // if (!this.FirstCamera) {
+        //   this.camera.position.set(0, 5, 10);
+        //   this.camera.lookAt(0, 0, 0);
+        // }
+
+        // Gán vị trí bắt đầu
+        this.cameraTransition.start.copy(this.camera.position);
+
+        // Gán vị trí kết thúc tùy theo FirstCamera
+        if (this.FirstCamera) {
+          this.cameraTransition.end.set(
+            this.player.position.x, 
+            2, 
+            this.player.position.z
+          ); // Góc nhìn thứ nhất
+
+          this.cameraTransition.lookAt.set(
+            0,
+            this.player.position.y,
+            this.player.position.z - 10
+          );
+        } else {
+          this.cameraTransition.end.set(0, 5, 10); // Góc nhìn thứ hai
+          this.cameraTransition.lookAt.set(
+            0,0,-10
+          );
+        }
+
+        this.cameraTransition.progress = 0;
+        this.cameraTransition.inProgress = true;
+      }
+    });
 
     // Setup scene
     this.scene = new THREE.Scene();
@@ -139,7 +186,7 @@ export class Game {
 
   updateCamera() {
     this.camera.position.x = this.player.position.x;
-    this.camera.position.y = this.player.position.y + 1.5;
+    this.camera.position.y = this.player.position.y + 2;
     this.camera.position.z = this.player.position.z;
     this.camera.lookAt(
       this.player.position.x,
@@ -293,7 +340,31 @@ export class Game {
         this.toggleLighting();
       }
 
-    // this.updateCamera();
+    if (this.FirstCamera == true) {
+      this.updateCamera();
+    }    
+    
+    // Nếu đang chuyển góc nhìn
+    if (this.cameraTransition.inProgress) {
+      this.cameraTransition.progress += delta / this.cameraTransition.duration;
+
+      const t = Math.min(this.cameraTransition.progress, 1); // clamp 0 → 1
+
+      // Nội suy vị trí
+      this.camera.position.lerpVectors(
+        this.cameraTransition.start,
+        this.cameraTransition.end,
+        t
+      );
+
+      // Cập nhật hướng nhìn
+      this.camera.lookAt(this.cameraTransition.lookAt);
+
+      // Kết thúc quá trình nếu hoàn tất
+      if (t >= 1) {
+        this.cameraTransition.inProgress = false;
+      }
+    }
 
     this.renderer.render(this.scene, this.camera);
   }
@@ -325,13 +396,15 @@ export class Game {
       );
     });
 
-    // Add event listener for restart button
-    const restartButton = this.container.querySelector("#restartButton");
-    if (restartButton) {
-      restartButton.onclick = () => {
-        this.resetGame();
-      };
-    }
+    window.addEventListener("gameOverShown", () => {
+      const restartButton = document.querySelector("#restartButton");
+      if (restartButton) {
+        restartButton.onclick = () => {
+          console.log("da bam");
+          this.resetGame(); // hoặc this.resetGame(), tùy thuộc ngữ cảnh
+        };
+      }
+    });    
   }
 
   async getTopScores() {

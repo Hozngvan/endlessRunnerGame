@@ -175,6 +175,10 @@ export class UI {
       <button id="restartButton" style="padding: 10px 20px; font-size: 18px; margin-top: 20px;">Restart</button>
     `;
     this.gameOverElement.style.display = "block";
+
+    // Gửi sự kiện tùy chỉnh sau khi nút đã được tạo
+    const event = new CustomEvent("gameOverShown");
+    window.dispatchEvent(event);
   }
 
   hideGameOver() {
