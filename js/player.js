@@ -16,8 +16,19 @@ export class Player {
     
     // Create player mesh (simple for now)
     this.createPlayerMesh();
+    this.createPlayerLight();
   }
   
+  createPlayerLight() {
+    this.playerLight = new THREE.PointLight(0xffffaa, 1, 15);
+    this.playerLight.position.set(
+      this.position.x,
+      this.position.y + 1.5,
+      this.position.z + 2
+    );
+    this.scene.add(this.playerLight);
+  }
+
   createPlayerMesh() {
     // Player body chicken
     // const bodyGeometry = new THREE.BoxGeometry(1, 1, 1);
@@ -137,6 +148,8 @@ export class Player {
     
     // Update mesh position
     this.mesh.position.copy(this.position);
+
+    this.playerLight.position.set(this.position.x, this.position.y + 1.5, this.position.z + 2);
   }
   
   jump() {

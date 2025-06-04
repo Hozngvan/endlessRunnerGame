@@ -9,6 +9,9 @@ export class World {
 
     this.createGround();
     this.createSkyBox();
+    //this.hideDaySkyBox();
+    this.createNightSkyBox();
+    this.hideNightSkyBox();
     this.createRoadSegments();
     this.createBuildings();
   }
@@ -25,11 +28,11 @@ export class World {
   }
 
   createSkyBox() {
-    const sky = new Sky();
-    sky.scale.setScalar(450000);
-    this.scene.add(sky);
+    this.sky = new Sky();
+    this.sky.scale.setScalar(450000);
+    this.scene.add(this.sky);
 
-    const skyUniforms = sky.material.uniforms;
+    const skyUniforms = this.sky.material.uniforms;
     skyUniforms["turbidity"].value = 10;
     skyUniforms["rayleigh"].value = 2;
     skyUniforms["mieCoefficient"].value = 0.005;
@@ -42,12 +45,68 @@ export class World {
     sun.x = Math.cos(phi) * Math.sin(theta);
     sun.y = Math.cos(theta);
     sun.z = Math.sin(phi) * Math.sin(theta);
-    sky.material.uniforms["sunPosition"].value.copy(sun);
+    this.sky.material.uniforms["sunPosition"].value.copy(sun);
 
     // Optional: dùng thêm ánh sáng mặt trời (DirectionalLight)
-    const sunlight = new THREE.DirectionalLight(0xffffff, 1);
-    sunlight.position.copy(sun);
-    this.scene.add(sunlight);
+    this.sunlight = new THREE.DirectionalLight(0xffffff, 1);
+    this.sunlight.position.copy(sun);
+    this.scene.add(this.sunlight);
+  }
+
+  showDaySkyBox() {
+    if (this.sky) this.sky.visible = true;
+    if (this.sunlight) this.sunlight.visible = true;
+  }
+
+  hideDaySkyBox() {
+    if (this.sky) this.sky.visible = false;
+    if (this.sunlight) this.sunlight.visible = false;
+  }
+
+  showNightSkyBox() {
+    if (this.nightSky) this.nightSky.visible = true;
+    if (this.moon) this.moon.visible = true;
+    if (this.moonLight) this.moonLight.visible = true;
+    if (this.moonPointLight) this.moonPointLight.visible = true;
+  }
+
+  hideNightSkyBox() {
+    if (this.skySphere) this.skySphere.visible = false;
+    if (this.moon) this.moon.visible = false;
+    if (this.moonLight) this.moonLight.visible = false;
+    if (this.moonPointLight) this.moonPointLight.visible = false;
+  }
+
+  createNightSkyBox() {
+    // Bầu trời sao - sky sphere
+    const skyGeometry = new THREE.SphereGeometry(500, 128, 128);
+    const skyMaterial = new THREE.MeshBasicMaterial({
+      map: new THREE.TextureLoader().load('textures/star_sky.jpg'), // texture bầu trời sao
+      //side: THREE.BackSide,
+    });
+    this.skySphere = new THREE.Mesh(skyGeometry, skyMaterial);
+    this.scene.add(this.skySphere);
+
+    // Mặt trăng
+    const moonTexture = new THREE.TextureLoader().load('textures/moon.jpg');
+    const moonMaterial = new THREE.MeshStandardMaterial({
+      map: moonTexture,
+      emissive: 0x222222,
+      emissiveIntensity: 0.5,
+    });
+    this.moon = new THREE.Mesh(new THREE.SphereGeometry(1, 32, 32), moonMaterial);
+    this.moon.position.set(0, 10, -50);
+    this.scene.add(this.moon);
+
+    // ánh sáng điểm mặt trăng
+    this.moonPointLight = new THREE.PointLight(0xaaaaee, 1.7, 10);
+    this.moonPointLight.position.copy(this.moon.position);
+    this.scene.add(this.moonPointLight);
+
+    // Ánh sáng từ mặt trăng
+    this.moonLight = new THREE.DirectionalLight(0xaaaaee, 0.8);
+    this.moonLight.position.set(-10, 10, -50);
+    this.scene.add(this.moonLight);
   }
 
   createRoadSegments() {
@@ -66,8 +125,6 @@ export class World {
 
     const roadMaterial = new THREE.MeshLambertMaterial({
       map: texture,
-      roughness: 0,
-      metalness: 0,
       transparent: true,
     });
 

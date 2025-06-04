@@ -9,7 +9,7 @@ export class Game {
     this.container = container;
     this.speed = 15;
     this.baseSpeed = 15;
-    this.speedIncrement = 0.0005;
+    this.speedIncrement = 0.005;
     this.score = 0;
     this.coinScore = 0;
     this.coinValue = 1;
@@ -19,6 +19,8 @@ export class Game {
     this.playerName = "";
     this.lastScoreUpdate = 0; // Theo dõi thời gian cập nhật điểm
     this.minScoreToUpdate = 0; // Điểm tối thiểu để cập nhật top 5
+    this.isNight = false;
+    this.lastLightingMilestone = 0;
 
     // Setup scene
     this.scene = new THREE.Scene();
@@ -42,9 +44,11 @@ export class Game {
 
     // Setup lighting
     this.setupLighting();
+    this.setupNightLighting();
+    this.hideNightLighting()
 
     // Initialize game components
-    this.world = new World(this.scene);
+    this.world = new World(this.scene);   
     this.player = new Player(this.scene, this.lanes[this.currentLane]);
     this.obstacleManager = new ObstacleManager(this.scene, this.lanes);
     this.ui = new UI(this.container);
@@ -60,19 +64,77 @@ export class Game {
   }
 
   setupLighting() {
-    const dirLight = new THREE.DirectionalLight(0xffffff, 1);
-    dirLight.position.set(10, 10, 10);
-    dirLight.castShadow = true;
-    dirLight.shadow.camera.near = 0.1;
-    dirLight.shadow.camera.far = 100;
-    dirLight.shadow.camera.right = 20;
-    dirLight.shadow.camera.left = -20;
-    dirLight.shadow.camera.top = 20;
-    dirLight.shadow.camera.bottom = -20;
-    this.scene.add(dirLight);
+    this.dirLight = new THREE.DirectionalLight(0xffffff, 1);
+    this.dirLight.position.set(10, 10, 10);
+    this.dirLight.castShadow = true;
+    this.dirLight.shadow.camera.near = 0.1;
+    this.dirLight.shadow.camera.far = 100;
+    this.dirLight.shadow.camera.right = 20;
+    this.dirLight.shadow.camera.left = -20;
+    this.dirLight.shadow.camera.top = 20;
+    this.dirLight.shadow.camera.bottom = -20;
+    this.scene.add(this.dirLight);
 
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
-    this.scene.add(ambientLight);
+    this.ambientLight1 = new THREE.AmbientLight(0xffffff, 0.4);
+    this.scene.add(this.ambientLight1);
+  }
+
+  setupNightLighting() {
+    // Màu nền đêm (xanh đen)
+    this.scene.background = new THREE.Color(0x0a0a1a);
+
+    // Đèn mặt trăng yếu (ánh sáng trắng xanh nhạt)
+    this.moonLight = new THREE.DirectionalLight(0xaaaaff, 0.8);
+    this.moonLight.position.set(0, 10, -50);
+    this.moonLight.castShadow = true;
+    this.moonLight.shadow.camera.near = 0.1;
+    this.moonLight.shadow.camera.far = 100;
+    this.moonLight.shadow.camera.right = 20;
+    this.moonLight.shadow.camera.left = -20;
+    this.moonLight.shadow.camera.top = 20;
+    this.moonLight.shadow.camera.bottom = -20;
+    this.moonLight.shadow.mapSize.set(2048, 2048);
+    this.scene.add(this.moonLight);
+    
+    // Đèn môi trường rất nhẹ (gần như tối)
+    this.ambientLight2 = new THREE.AmbientLight(0x222244, 0.1);
+    this.scene.add(this.ambientLight2);
+  }
+
+  hideDayLighting() {
+    if (this.dirLight) this.dirLight.visible = false;
+    if (this.ambientLight1) this.ambientLight1.visible = false;
+  }
+
+  showDayLighting() {
+    if (this.dirLight) this.dirLight.visible = true;
+    if (this.ambientLight1) this.ambientLight1.visible = true;
+  }
+
+  hideNightLighting() {
+    if (this.moonLight) this.moonLight.visible = false;
+    if (this.ambientLight2) this.ambientLight2.visible = false;
+  }
+
+  showNightLighting() {
+    if (this.moonLight) this.moonLight.visible = true;
+    if (this.ambientLight2) this.ambientLight2.visible = true;
+  }
+
+  toggleLighting() {
+    if (this.isNight) {
+      this.hideNightLighting();
+      this.showDayLighting();
+      this.world.hideNightSkyBox();
+      this.world.showDaySkyBox();
+      this.isNight = false;
+    } else {
+      this.hideDayLighting();
+      this.showNightLighting();
+      this.world.hideDaySkyBox();
+      this.world.showNightSkyBox();
+      this.isNight = true;
+    }
   }
 
   updateCamera() {
@@ -196,7 +258,7 @@ export class Game {
 
     requestAnimationFrame(() => this.animate());
 
-    const delta = 0.01;
+    const delta = 0.016;
 
     this.speed += this.speedIncrement;
 
@@ -223,6 +285,13 @@ export class Game {
       this.lastScoreUpdate = currentTime;
       this.saveTempScore();
     }
+
+    // Switch Day - Night 
+    const milestone = Math.floor(this.score / 1000);
+      if (milestone > this.lastLightingMilestone) {
+        this.lastLightingMilestone = milestone;
+        this.toggleLighting();
+      }
 
     // this.updateCamera();
 

@@ -58,16 +58,54 @@ export class UI {
     this.nameInputElement.style.top = "50%";
     this.nameInputElement.style.left = "50%";
     this.nameInputElement.style.transform = "translate(-50%, -50%)";
-    this.nameInputElement.style.color = "white";
-    this.nameInputElement.style.fontFamily = "Arial, sans-serif";
-    this.nameInputElement.style.textAlign = "center";
+    this.nameInputElement.style.zIndex = "1000";
     this.nameInputElement.style.display = "none";
     this.nameInputElement.innerHTML = `
-      <div style="background: rgba(0, 0, 0, 0.7); padding: 20px; border-radius: 10px;">
-        <h2>Enter Your Name</h2>
-        <input type="text" id="playerName" style="padding: 10px; font-size: 16px;" placeholder="Your name" />
+      <div style="
+        background: linear-gradient(145deg, #1e1e1e, #2a2a2a);
+        padding: 30px;
+        border-radius: 15px;
+        box-shadow: 0 0 20px rgba(0,0,0,0.6);
+        text-align: center;
+        color: #ffffff;
+        font-family: 'Segoe UI', sans-serif;
+        width: 300px;
+      ">
+        <h2 style="margin-bottom: 20px; font-size: 24px;">Enter Your Name</h2>
+        <input 
+          type="text" 
+          id="playerName" 
+          style="
+            width: 80%;
+            padding: 12px 15px;
+            font-size: 16px;
+            border: none;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            background-color: #333;
+            color: #fff;
+            outline: none;
+          "
+          placeholder="Your name"
+        />
         <br>
-        <button id="startGame" style="padding: 10px 20px; font-size: 16px; margin-top: 10px;">Start</button>
+        <button 
+          id="startGame" 
+          style="
+            padding: 12px 25px;
+            font-size: 16px;
+            background: #00b894;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+          "
+          onmouseover="this.style.background='#019875'"
+          onmouseout="this.style.background='#00b894'"
+        >
+          Start
+        </button>
       </div>
     `;
     this.container.appendChild(this.nameInputElement);
