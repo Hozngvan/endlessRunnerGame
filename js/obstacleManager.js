@@ -395,15 +395,15 @@ export class ObstacleManager {
   }
 
   spawnRandomObstacle(z = this.spawnDistance) {
-    const minSpacing = 20;
-    const minCoinSpacing = 3;
+    const minSpacing = 2;
+    const minCoinSpacing = 1;
     const maxAttempts = 5;
 
     const blockCount = this.objects.filter(
       (obj) =>
         obj.objectType === "obstacle" &&
         obj.type === "block" &&
-        Math.abs(obj.position.z - z) < 1
+        Math.abs(obj.position.z - z) < minSpacing
     ).length;
 
     let availableTypes = [...this.obstacleTypes];
@@ -451,7 +451,7 @@ export class ObstacleManager {
   }
 
   spawnCoin(z = this.spawnDistance) {
-    const minCoinSpacing = 5;
+    const minCoinSpacing = 3;
     const minObstacleSpacing = 3; // Giảm từ 5 xuống 3
 
     const closeCoin = this.objects.find(
@@ -638,12 +638,12 @@ export class ObstacleManager {
     this.obstacleCount = { barrier: 0, block: 0, fence: 0 };
     this.lastCoinLaneIndex = null;
 
-    for (let i = 0; i < 10; i++) {
-      this.spawnRandomObstacle(-10 - i * 15);
+    for (let i = 0; i < 5; i++) {
+      this.spawnRandomObstacle(-25 - i * 30);
     }
 
-    for (let i = 0; i < 20; i++) {
-      this.spawnCoin(-15 - i * 10);
+    for (let i = 0; i < 50; i++) {
+      this.spawnCoin(-25 - i * 30);
     }
   }
 }
