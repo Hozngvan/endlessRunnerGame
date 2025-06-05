@@ -8,6 +8,7 @@ export class ObstacleManager {
     this.spawnDistance = -100;
     this.despawnDistance = 20;
     this.obstacleTypes = ["barrier", "block", "fence"];
+    this.obstacleCount = { barrier: 0, block: 0, fence: 0 };
 
     // Create some initial objects
     this.init();
@@ -150,8 +151,10 @@ export class ObstacleManager {
       //obstacle.rotation.y = Math.PI / 2;
       obstacle.type = "barrier";
 
-      // if (Math.random() < 0.2) {
-      // this.spawnCoinsOverObstacle(obstacle);
+      if (Math.random() < 0.5) {
+        this.spawnCoinsOverObstacle(obstacle);
+      }
+
     } else if (type === "block") {
       // === 1. TẠO THÂN XE ===
       const busBody = new THREE.Mesh(
@@ -303,6 +306,7 @@ export class ObstacleManager {
     obstacle.objectType = "obstacle"; // Đánh dấu là obstacle
     this.scene.add(obstacle);
     this.objects.push(obstacle);
+    this.obstacleCount[type]++;
     return obstacle;
   }
 
@@ -360,24 +364,31 @@ export class ObstacleManager {
   }
 
   spawnRandomObstacle(z = this.spawnDistance) {
-    const minSpacing = 30; // Khoảng cách tối thiểu giữa 2 obstacle cùng lane
-    const minCoinSpacing = 5; // Khoảng cách tối thiểu giữa obstacle và coin cùng lane
-    const maxAttempts = 5; // Số lần thử sinh obstacle ở các lane ngẫu nhiên
+    const minSpacing = 30;
+    const minCoinSpacing = 5;
+    const maxAttempts = 5;
 
-    // Đếm số lượng block ở cùng vị trí z (hoặc gần đó)
     const blockCount = this.objects.filter(
       (obj) =>
         obj.objectType === "obstacle" &&
         obj.type === "block" &&
-        Math.abs(obj.position.z - z) < 1 // Xem xét các block gần vị trí z
+        Math.abs(obj.position.z - z) < 1
     ).length;
 
-    // Tạo danh sách loại obstacle có thể chọn
     let availableTypes = [...this.obstacleTypes];
     if (blockCount >= 2) {
-      // Nếu đã có 2 block, loại bỏ 'block' khỏi danh sách
       availableTypes = availableTypes.filter((type) => type !== "block");
     }
+
+    // Tìm loại obstacle có số lần xuất hiện ít nhất
+    let minCount = Infinity;
+    let selectedType = null;
+    availableTypes.forEach((type) => {
+      if (this.obstacleCount[type] < minCount) {
+        minCount = this.obstacleCount[type];
+        selectedType = type;
+      }
+    });
 
     for (let attempt = 0; attempt < maxAttempts; attempt++) {
       const laneIndex = Math.floor(Math.random() * this.lanes.length);
@@ -397,15 +408,12 @@ export class ObstacleManager {
       });
 
       if (!tooClose) {
-        const typeIndex = Math.floor(Math.random() * availableTypes.length);
-        const type = availableTypes[typeIndex];
-        this.createObstacle(type, lane, z);
-
-        return true; // Spawn thành công
+        this.createObstacle(selectedType, lane, z);
+        return true;
       }
     }
 
-    return false; // Không thể spawn sau maxAttempts
+    return false;
   }
 
   spawnCoin(z = this.spawnDistance) {
@@ -464,26 +472,19 @@ export class ObstacleManager {
   update(delta, speed) {
     for (let i = this.objects.length - 1; i >= 0; i--) {
       const obj = this.objects[i];
-      if (obj.type === "block") {
-        obj.position.z += speed * delta;
-      } else if (obj.type === "barrier") {
-        obj.position.z += speed * delta;
-      } else {
-        obj.position.z += speed * delta;
-      }
+      obj.position.z += speed * delta;
 
-      // Xử lý riêng cho từng loại object
       if (obj.objectType === "coin") {
         obj.rotation.y += 2 * delta; // Xoay coin
       }
 
-      // Xóa object khi vượt quá despawnDistance
       if (obj.position.z > this.despawnDistance) {
         this.scene.remove(obj);
+        const removedType = obj.type;
         this.objects.splice(i, 1);
 
-        // Tạo lại object tương ứng
         if (obj.objectType === "obstacle") {
+          this.obstacleCount[removedType]--; // Giảm số đếm khi xóa
           this.spawnRandomObstacle();
           if (Math.random() < 0.5) this.spawnRandomObstacle();
         } else if (obj.objectType === "coin") {
@@ -579,10 +580,11 @@ export class ObstacleManager {
   reset() {
     this.objects.forEach((obj) => this.scene.remove(obj));
     this.objects = [];
+    this.obstacleCount = { barrier: 0, block: 0, fence: 0 };
 
     for (let i = 0; i < 10; i++) {
       this.spawnRandomObstacle(-30 - i * 10);
-      this.spawnCoin(-25 - i * 20);
+      this.spawnCoin(-15 - i * 10);
     }
   }
 }
