@@ -5,16 +5,25 @@ export class ObstacleManager {
     this.scene = scene;
     this.lanes = lanes;
     this.objects = []; // Mảng chung cho cả obstacles và coins
+    this.coinPool = []; // Mảng lưu vàng
     this.spawnDistance = -100;
     this.despawnDistance = 20;
     this.obstacleTypes = ["barrier", "block", "fence"];
     this.obstacleCount = { barrier: 0, block: 0, fence: 0 };
-
+    this.lastCoinLaneIndex = null;
     // Create some initial objects
     this.init();
   }
 
   init() {
+    // Tạo sẵn 100 coin trong coinPool
+    for (let i = 0; i < 100; i++) {
+      const coin = this.createCoin(0, 0);
+      coin.visible = false;
+      this.coinPool.push(coin);
+    }
+    console.log(`Initialized coinPool with ${this.coinPool.length} coins`);
+
     // Clear any existing objects
     this.reset();
 
@@ -30,13 +39,20 @@ export class ObstacleManager {
     const spacing = 2.3; // Khoảng cách giữa các coin theo z
     const maxHeight = 2; // Chiều cao đỉnh
 
+    const availableCoins = this.coinPool.filter((c) => !c.visible).length;
+    if (availableCoins < count) {
+      console.warn(`Not enough coins for spawnCoinsOverObstacle (need ${count}, available ${availableCoins})`);
+      return;
+    }
+
     for (let i = 0; i < count; i++) {
       const t = i / (count - 1); // 0 -> 1
       const zOffset = (t - 0.5) * (count - 1) * spacing; // z lệch trái - giữa - phải
       const height = -4 * (t - 0.5) ** 2 + 1; // Parabol: cao ở giữa
       const y = 1.2 + height * maxHeight; // nâng khỏi barrier một ít
 
-      this.createCoin(lane, baseZ + zOffset).position.y = y;
+      const coin = this.spawnCoinFromPool(lane, baseZ + zOffset, y);
+      if (!coin) console.warn(`Không đủ coin trong coinPool tại lane=${lane}, z=${baseZ + zOffset}`);
     }
   }
 
@@ -151,9 +167,9 @@ export class ObstacleManager {
       //obstacle.rotation.y = Math.PI / 2;
       obstacle.type = "barrier";
 
-      if (Math.random() < 0.5) {
-        this.spawnCoinsOverObstacle(obstacle);
-      }
+      // if (Math.random() < 0.5) {
+      //   this.spawnCoinsOverObstacle(obstacle);
+      // }
 
     } else if (type === "block") {
       // === 1. TẠO THÂN XE ===
@@ -313,8 +329,8 @@ export class ObstacleManager {
   createCoin(lane, z) {
     const outerRadius = 0.5;
     const tubeRadius = 0.15;
-    const radialSegments = 32;
-    const tubularSegments = 64;
+    const radialSegments = 16;
+    const tubularSegments = 32;
 
     const geometry = new THREE.TorusGeometry(
       outerRadius,
@@ -358,14 +374,29 @@ export class ObstacleManager {
     coinGroup.objectType = "coin";
 
     this.scene.add(coinGroup);
-    this.objects.push(coinGroup);
-
     return coinGroup;
   }
 
+  spawnCoinFromPool(lane, z, y = 1.5) {
+    const coin = this.coinPool.find((c) => !c.visible);
+    if (!coin) {
+      console.warn(`Không đủ coin trong coinPool tại lane=${lane}, z=${z}. Active coins: ${this.coinPool.filter(c => c.visible).length}`);
+      return null;
+    }
+
+    coin.position.set(lane, y, z);
+    coin.rotation.y = 0;
+    coin.visible = true;
+    if (!this.objects.includes(coin)) {
+      this.objects.push(coin);
+    }
+    console.log(`Spawn coin tại lane=${lane}, y=${y}, z=${z}, visible=${coin.visible}`);
+    return coin;
+  }
+
   spawnRandomObstacle(z = this.spawnDistance) {
-    const minSpacing = 30;
-    const minCoinSpacing = 5;
+    const minSpacing = 20;
+    const minCoinSpacing = 3;
     const maxAttempts = 5;
 
     const blockCount = this.objects.filter(
@@ -408,7 +439,10 @@ export class ObstacleManager {
       });
 
       if (!tooClose) {
-        this.createObstacle(selectedType, lane, z);
+        const obstacle = this.createObstacle(selectedType, lane, z);
+        if (selectedType === "barrier" && Math.random() < 0.5) {
+          this.spawnCoinsOverObstacle(obstacle);
+        }
         return true;
       }
     }
@@ -418,7 +452,7 @@ export class ObstacleManager {
 
   spawnCoin(z = this.spawnDistance) {
     const minCoinSpacing = 5;
-    const minObstacleSpacing = 5; // Giảm từ 5 xuống 3
+    const minObstacleSpacing = 3; // Giảm từ 5 xuống 3
 
     const closeCoin = this.objects.find(
       (obj) =>
@@ -426,7 +460,8 @@ export class ObstacleManager {
         Math.abs(obj.position.z - z) < minCoinSpacing
     );
     if (closeCoin) {
-      return false; // Bỏ qua spawn
+      console.log(`Không spawn coin tại z=${z} vì quá gần coin khác`);
+      return false;
     }
 
     let laneIndex;
@@ -442,10 +477,16 @@ export class ObstacleManager {
     const coinCount = Math.floor(Math.random() * 3) + 3; // Giảm từ 3-5 xuống 2-3 coins
     const spacing = 3; // Tăng từ 2.5 lên 3
 
+    const availableCoins = this.coinPool.filter((c) => !c.visible).length;
+    if (availableCoins < coinCount) {
+      console.warn(`Not enough coins for spawnCoin (need ${coinCount}, available ${availableCoins})`);
+      return false;
+    }
+
     for (let i = 0; i < coinCount; i++) {
       const coinZ = z - i * spacing;
       const tooClose = this.objects.some((obj) => {
-        if (obj.position.x === lane) {
+        if (obj.position.x === lane && obj.visible) {
           const distance = Math.abs(obj.position.z - coinZ);
           if (obj.objectType === "obstacle" && distance < minObstacleSpacing) {
             return true;
@@ -458,37 +499,44 @@ export class ObstacleManager {
       });
 
       if (tooClose) {
+        console.log(`Không spawn coin tại z=${coinZ} vì quá gần`);
         return false;
       }
     }
 
     for (let i = 0; i < coinCount; i++) {
       const coinZ = z - i * spacing;
-      this.createCoin(lane, coinZ);
+      this.spawnCoinFromPool(lane, coinZ);
     }
     return true; // Spawn thành công
   }
 
   update(delta, speed) {
+    const activeCoins = this.coinPool.filter((c) => c.visible).length;
+    console.log(`Active coins: ${activeCoins}/${this.coinPool.length}`);
+
     for (let i = this.objects.length - 1; i >= 0; i--) {
       const obj = this.objects[i];
+      if (!obj.visible) continue;
+
       obj.position.z += speed * delta;
 
       if (obj.objectType === "coin") {
-        obj.rotation.y += 2 * delta; // Xoay coin
+        obj.rotation.y += 2 * delta;
       }
 
       if (obj.position.z > this.despawnDistance) {
-        this.scene.remove(obj);
-        const removedType = obj.type;
-        this.objects.splice(i, 1);
-
         if (obj.objectType === "obstacle") {
-          this.obstacleCount[removedType]--; // Giảm số đếm khi xóa
+          this.scene.remove(obj);
+          const removedType = obj.type;
+          this.objects.splice(i, 1);
+          this.obstacleCount[removedType]--;
           this.spawnRandomObstacle();
           if (Math.random() < 0.5) this.spawnRandomObstacle();
         } else if (obj.objectType === "coin") {
-          this.spawnCoin();
+          obj.visible = false;
+          console.log(`Ẩn coin tại z=${obj.position.z}`);
+          // this.spawnCoin();
         }
       }
     }
@@ -499,7 +547,7 @@ export class ObstacleManager {
       playerPosition,
       new THREE.Vector3(1, isJumping ? 1 : 2, 1)
     );
-
+    
     for (const obj of this.objects) {
       if (
         obj.objectType !== "obstacle" ||
@@ -544,6 +592,7 @@ export class ObstacleManager {
 
       if (
         obj.objectType !== "coin" ||
+        !obj.visible ||
         obj.position.z < -1 ||
         obj.position.z > 1
       ) {
@@ -569,8 +618,8 @@ export class ObstacleManager {
     for (let i = collectedCoins.length - 1; i >= 0; i--) {
       const coinIndex = collectedCoins[i];
       const coin = this.objects[coinIndex];
-      this.scene.remove(coin);
-      this.objects.splice(coinIndex, 1);
+      coin.visible = false;
+      console.log(`Thu thập coin tại z=${coin.position.z}`);
       this.spawnCoin();
     }
 
@@ -578,12 +627,22 @@ export class ObstacleManager {
   }
 
   reset() {
-    this.objects.forEach((obj) => this.scene.remove(obj));
-    this.objects = [];
+    this.objects.forEach((obj) => {
+      if (obj.objectType === "obstacle") {
+        this.scene.remove(obj);
+      } else {
+        obj.visible = false;
+      }
+    });
+    this.objects = this.coinPool.filter((coin) => coin.visible);
     this.obstacleCount = { barrier: 0, block: 0, fence: 0 };
+    this.lastCoinLaneIndex = null;
 
     for (let i = 0; i < 10; i++) {
-      this.spawnRandomObstacle(-30 - i * 10);
+      this.spawnRandomObstacle(-10 - i * 15);
+    }
+
+    for (let i = 0; i < 20; i++) {
       this.spawnCoin(-15 - i * 10);
     }
   }
