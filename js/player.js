@@ -8,9 +8,13 @@ export class Player {
     this.targetX = initialX; // Làn chạy 
     this.isJumping = false;
     this.jumpHeight = 2.1;
+    this.boostedJumpHeight = 4.0;
     this.gravity = 30;
     this.jumpSpeed = 10;
     this.verticalVelocity = 0; // Speed 
+    this.jumpBoostActive = false; // Trạng thái tăng cường nhảy
+    this.boostDuration = 3; // Thời gian hiệu lực (giây)
+    this.boostTimer = 0; // Bộ đếm thời gian
     this.legGroupLeft = new THREE.Group();
     this.legGroupRight = new THREE.Group();
     
@@ -123,6 +127,11 @@ export class Player {
     this.scene.add(this.mesh);
   }
   
+  activateJumpBoost() {
+    this.jumpBoostActive = true;
+    this.boostTimer = this.boostDuration;
+  }
+
   update(delta) {
     // Handle jumping
     if (this.isJumping) {
@@ -136,6 +145,16 @@ export class Player {
       }
     }
     
+    // Giảm bộ đếm thời gian tăng cường nhảy
+    if (this.jumpBoostActive) {
+      console.log("Jump boost active");
+      this.boostTimer -= delta;
+      if (this.boostTimer <= 0) {
+        this.jumpBoostActive = false;
+        
+      }
+    }
+
     // Legs animation when running 
     const time = Date.now() * 0.01;
     const legSwing = Math.sin(time);
@@ -155,7 +174,10 @@ export class Player {
   jump() {
     if (!this.isJumping) {
       this.isJumping = true;
-      this.verticalVelocity = Math.sqrt(2 * this.gravity * this.jumpHeight);
+      const currentJumpHeight = this.jumpBoostActive
+        ? this.boostedJumpHeight
+        : this.jumpHeight;
+      this.verticalVelocity = Math.sqrt(2 * this.gravity * currentJumpHeight);
     }
   }
   
@@ -168,6 +190,8 @@ export class Player {
     this.targetX = 0;
     this.isJumping = false;
     this.verticalVelocity = 0;
+    this.jumpBoostActive = false;
+    this.boostTimer = 0;
     this.mesh.position.copy(this.position);
   }
 }

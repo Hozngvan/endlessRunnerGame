@@ -26,6 +26,7 @@ export class ObstacleManager {
     this.maxObstaclePoolSize = 10; 
 
     this.maxOccupiedLanes = 2;
+    this.maxShoeAttempts = 5;
     // Tạo pool ban đầu
     this.initPools();
 
@@ -96,8 +97,8 @@ export class ObstacleManager {
 
   spawnShoe(z = this.spawnDistance) {
     const minShoeSpacing = 10;
-    const minObstacleSpacing = 10;
-    const minCoinSpacing = 5;
+    const minObstacleSpacing = 1;
+    const minCoinSpacing = 1;
 
     // Kiểm tra xem có giày nào quá gần không
     const closeShoe = this.activeShoes.find(
@@ -107,44 +108,54 @@ export class ObstacleManager {
       return false;
     }
 
-    let laneIndex;
-    const possibleIndexes = this.lanes
-      .map((_, idx) => idx)
-      .filter((idx) => idx !== this.lastShoeLaneIndex);
-    laneIndex =
-      possibleIndexes[Math.floor(Math.random() * possibleIndexes.length)];
+    // Chỉ chọn các lane chưa bị chiếm bởi giày gần đó
+    const occupiedLanes = new Set(
+      this.activeShoes
+        .filter((obj) => Math.abs(obj.position.z - z) < minShoeSpacing)
+        .map((obj) => obj.position.x)
+    );
 
-    this.lastShoeLaneIndex = laneIndex;
-    const lane = this.lanes[laneIndex];
+    const availableLanes = this.lanes.filter(
+      (lane) => !occupiedLanes.has(lane)
+    );
 
-    // Kiểm tra khoảng cách với obstacle và coin
-    const tooClose = this.objects.some((obj) => {
-      if (obj.position.x === lane) {
-        const distance = Math.abs(obj.position.z - z);
-        if (obj.objectType === "obstacle" && distance < minObstacleSpacing) {
-          return true;
+    if (availableLanes.length === 0) {
+      return false; // Không còn lane trống để spawn
+    }
+
+    for (let attempt = 0; attempt < this.maxShoeAttempts; attempt++) {
+      const laneIndex = Math.floor(Math.random() * availableLanes.length);
+      const lane = availableLanes[laneIndex];
+
+      // Kiểm tra khoảng cách với obstacle và coin
+      const tooClose = this.objects.some((obj) => {
+        if (obj.position.x === lane) {
+          const distance = Math.abs(obj.position.z - z);
+          if (obj.objectType === "obstacle" && distance < minObstacleSpacing) {
+            return true;
+          }
+          if (obj.objectType === "coin" && distance < minCoinSpacing) {
+            return true;
+          }
         }
-        if (obj.objectType === "coin" && distance < minCoinSpacing) {
+        return false;
+      });
+
+      if (!tooClose) {
+        const shoe = this.getShoeFromPool();
+        if (shoe) {
+          shoe.position.set(lane, 1.0, z);
+          shoe.visible = true;
+          this.scene.add(shoe);
+          this.activeShoes.push(shoe);
+          this.objects.push(shoe);
+          this.lastShoeLaneIndex = this.lanes.indexOf(lane);
           return true;
         }
       }
-      return false;
-    });
-
-    if (tooClose) {
-      return false;
     }
 
-    const shoe = this.getShoeFromPool();
-    if (shoe) {
-      shoe.position.set(lane, 1.0, z);
-      shoe.visible = true;
-      this.scene.add(shoe);
-      this.activeShoes.push(shoe);
-      this.objects.push(shoe);
-      return true;
-    }
-    return false;
+    return false; // Không thể spawn sau max attempts
   }
   
   spawnCoinsOverObstacle(obstacle) {
@@ -515,6 +526,7 @@ export class ObstacleManager {
   spawnRandomObstacle(z = this.spawnDistance) {
     const minSpacing = 30;
     const minCoinSpacing = 5;
+    const minShoeSpacing = 1;
     const maxAttempts = 5;
 
     // Đếm số lane đang có obstacle gần vị trí z
@@ -568,6 +580,9 @@ export class ObstacleManager {
           if (obj.objectType === "coin" && distance < minCoinSpacing) {
             return true;
           }
+          if (obj.objectType === "shoe" && distance < minShoeSpacing) {
+            return true;
+          }
         }
         return false;
       });
@@ -581,6 +596,9 @@ export class ObstacleManager {
           this.activeObstacles.push(obstacle);
           this.objects.push(obstacle);
           this.obstacleCount[selectedType]++;
+          if (selectedType === "barrier" && Math.random() < 0.5) {
+          this.spawnCoinsOverObstacle(obstacle);
+        }
           return true;
         }
       }
@@ -592,6 +610,7 @@ export class ObstacleManager {
   spawnCoin(z = this.spawnDistance) {
     const minCoinSpacing = 5;
     const minObstacleSpacing = 5;
+    const minShoeSpacing = 1;
 
     const closeCoin = this.activeCoins.find(
       (obj) => Math.abs(obj.position.z - z) < minCoinSpacing
@@ -619,6 +638,9 @@ export class ObstacleManager {
         if (obj.position.x === lane) {
           const distance = Math.abs(obj.position.z - coinZ);
           if (obj.objectType === "obstacle" && distance < minObstacleSpacing) {
+            return true;
+          }
+          if (obj.objectType === "shoe" && distance < minShoeSpacing) {
             return true;
           }
         }
@@ -833,12 +855,11 @@ export class ObstacleManager {
 
     // Tạo lại các object ban đầu
     for (let i = 0; i < 10; i++) {
-      // this.spawnRandomObstacle(-30 - i * 10);
-      // this.spawnCoin(-15 - i * 10);
+      this.spawnRandomObstacle(-30 - i * 10);
     }
 
     for (let i = 0; i < 20; i++) {
-      // this.spawnCoin(-15 - i * 10);
+      this.spawnCoin(-15 - i * 10);
     }
 
     for (let i = 0; i < 1; i++) {

@@ -392,7 +392,9 @@ export class Game {
       this.player.position,
       this.player.isJumping
     );
+
     if (collision) {
+      this.player.activateJumpBoost();
       console.log("Collision detected!");
     } else {
       console.log("No collision.");
