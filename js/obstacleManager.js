@@ -7,6 +7,8 @@ export class ObstacleManager {
     this.objects = []; // Mảng chung cho cả obstacles và coins
     this.coinPool = []; // Pool để lưu trữ các coin tái sử dụng
     this.activeCoins = []; // Mảng lưu các coin đang hoạt động
+    this.shoePool = []; // Pool cho item giày
+    this.activeShoes = []; // Giày đang hoạt động
     this.obstaclePools = {
       barrier: [],
       block: [],
@@ -19,7 +21,8 @@ export class ObstacleManager {
     this.obstacleTypes = ["barrier", "block", "fence"];
     this.obstacleCount = { barrier: 0, block: 0, fence: 0 };
 
-    this.maxCoinPoolSize = 100;
+    this.maxCoinPoolSize = 50;
+    this.maxShoePoolSize = 5;
     this.maxObstaclePoolSize = 10; 
 
     this.maxOccupiedLanes = 2;
@@ -39,6 +42,14 @@ export class ObstacleManager {
       this.coinPool.push(coin);
     }
 
+    // Tạo pool cho giày
+    for (let i = 0; i < this.maxShoePoolSize; i++) {
+      const shoe = this.createShoe(0, 0);
+      shoe.visible = false;
+      this.scene.remove(shoe);
+      this.shoePool.push(shoe);
+    }
+
     // Tạo pool cho obstacle
     this.obstacleTypes.forEach((type) => {
       for (let i = 0; i < this.maxObstaclePoolSize; i++) {
@@ -52,13 +63,90 @@ export class ObstacleManager {
 
   init() {
     this.reset();
-
-    // for (let i = 0; i < 10; i++) {
-    //   this.spawnRandomObstacle(-30 - i * 10);
-    //   this.spawnCoin(-15 - i * 10);
-    // }
   }
 
+  createShoe(lane, z) {
+    const geometry = new THREE.BoxGeometry(0.5, 0.5, 0.5);
+    const material = new THREE.MeshStandardMaterial({
+      color: 0x00ff00, // Màu xanh lá cho giày
+      metalness: 0.3,
+      roughness: 0.4,
+    });
+    const shoe = new THREE.Mesh(geometry, material);
+    shoe.position.set(lane, 1.0, z);
+    shoe.castShadow = true;
+    shoe.receiveShadow = true;
+    shoe.objectType = "shoe";
+
+    return shoe;
+  }
+
+  getShoeFromPool() {
+    if (this.shoePool.length === 0) {
+      return null;
+    }
+    return this.shoePool.pop();
+  }
+
+  returnShoeToPool(shoe) {
+    shoe.visible = false;
+    this.scene.remove(shoe);
+    this.shoePool.push(shoe);
+  }
+
+  spawnShoe(z = this.spawnDistance) {
+    const minShoeSpacing = 10;
+    const minObstacleSpacing = 10;
+    const minCoinSpacing = 5;
+
+    // Kiểm tra xem có giày nào quá gần không
+    const closeShoe = this.activeShoes.find(
+      (obj) => Math.abs(obj.position.z - z) < minShoeSpacing
+    );
+    if (closeShoe) {
+      return false;
+    }
+
+    let laneIndex;
+    const possibleIndexes = this.lanes
+      .map((_, idx) => idx)
+      .filter((idx) => idx !== this.lastShoeLaneIndex);
+    laneIndex =
+      possibleIndexes[Math.floor(Math.random() * possibleIndexes.length)];
+
+    this.lastShoeLaneIndex = laneIndex;
+    const lane = this.lanes[laneIndex];
+
+    // Kiểm tra khoảng cách với obstacle và coin
+    const tooClose = this.objects.some((obj) => {
+      if (obj.position.x === lane) {
+        const distance = Math.abs(obj.position.z - z);
+        if (obj.objectType === "obstacle" && distance < minObstacleSpacing) {
+          return true;
+        }
+        if (obj.objectType === "coin" && distance < minCoinSpacing) {
+          return true;
+        }
+      }
+      return false;
+    });
+
+    if (tooClose) {
+      return false;
+    }
+
+    const shoe = this.getShoeFromPool();
+    if (shoe) {
+      shoe.position.set(lane, 1.0, z);
+      shoe.visible = true;
+      this.scene.add(shoe);
+      this.activeShoes.push(shoe);
+      this.objects.push(shoe);
+      return true;
+    }
+    return false;
+  }
+  
   spawnCoinsOverObstacle(obstacle) {
     const lane = obstacle.position.x;
     const baseZ = obstacle.position.z;
@@ -571,6 +659,20 @@ export class ObstacleManager {
       }
     }
 
+    for (let i = this.activeShoes.length - 1; i >= 0; i--) {
+      const shoe = this.activeShoes[i];
+      shoe.position.z += speed * delta;
+      shoe.rotation.y += 2 * delta; // Xoay giày để dễ nhìn
+
+      if (shoe.position.z > this.despawnDistance) {
+        this.returnShoeToPool(shoe);
+        this.activeShoes.splice(i, 1);
+        const index = this.objects.indexOf(shoe);
+        if (index !== -1) this.objects.splice(index, 1);
+        this.spawnShoe();
+      }
+    }
+
     for (let i = this.activeObstacles.length - 1; i >= 0; i--) {
       const obstacle = this.activeObstacles[i];
       obstacle.position.z += speed * delta;
@@ -581,7 +683,6 @@ export class ObstacleManager {
         this.activeObstacles.splice(i, 1);
         const index = this.objects.indexOf(obstacle);
         if (index !== -1) this.objects.splice(index, 1);
-        // Chỉ spawn một obstacle mới, bỏ spawn bổ sung
         this.spawnRandomObstacle();
       }
     }
@@ -657,12 +758,64 @@ export class ObstacleManager {
     return collectedCoins.length;
   }
 
+  checkShoeCollision(playerPosition) {
+    const playerBoundingBox = new THREE.Box3().setFromCenterAndSize(
+      playerPosition,
+      new THREE.Vector3(1, 2, 1)
+    );
+
+    const collectedShoes = [];
+
+    for (let i = 0; i < this.activeShoes.length; i++) {
+      const shoe = this.activeShoes[i];
+
+      if (shoe.position.z < -1 || shoe.position.z > 1) {
+        continue;
+      }
+
+      const originalBox = new THREE.Box3().setFromObject(shoe);
+      const shrinkFactor = 0.4;
+      const center = originalBox.getCenter(new THREE.Vector3());
+      const size = originalBox
+        .getSize(new THREE.Vector3())
+        .multiplyScalar(shrinkFactor);
+      const shoeBoundingBox = new THREE.Box3().setFromCenterAndSize(
+        center,
+        size
+      );
+
+      if (playerBoundingBox.intersectsBox(shoeBoundingBox)) {
+        collectedShoes.push(i);
+      }
+    }
+
+    for (let i = collectedShoes.length - 1; i >= 0; i--) {
+      const shoeIndex = collectedShoes[i];
+      const shoe = this.activeShoes[shoeIndex];
+      this.returnShoeToPool(shoe);
+      this.activeShoes.splice(shoeIndex, 1);
+      const objIndex = this.objects.indexOf(shoe);
+      if (objIndex !== -1) this.objects.splice(objIndex, 1);
+      this.spawnShoe();
+    }
+
+    return collectedShoes.length;
+  }
+
   reset() {
     // Đưa coin về pool
     while (this.activeCoins.length > 0) {
       const coin = this.activeCoins.pop();
       this.returnCoinToPool(coin);
       const index = this.objects.indexOf(coin);
+      if (index !== -1) this.objects.splice(index, 1);
+    }
+
+    // Đưa giày về pool
+    while (this.activeShoes.length > 0) {
+      const shoe = this.activeShoes.pop();
+      this.returnShoeToPool(shoe);
+      const index = this.objects.indexOf(shoe);
       if (index !== -1) this.objects.splice(index, 1);
     }
 
@@ -680,12 +833,18 @@ export class ObstacleManager {
 
     // Tạo lại các object ban đầu
     for (let i = 0; i < 10; i++) {
-      this.spawnRandomObstacle(-30 - i * 10);
+      // this.spawnRandomObstacle(-30 - i * 10);
       // this.spawnCoin(-15 - i * 10);
     }
 
     for (let i = 0; i < 20; i++) {
-      this.spawnCoin(-15 - i * 10);
+      // this.spawnCoin(-15 - i * 10);
+    }
+
+    for (let i = 0; i < 1; i++) {
+      // if (Math.random() < 0.2) {
+      this.spawnShoe(-15 - i * 10);
+      // }
     }
   }
 }

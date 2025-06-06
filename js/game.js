@@ -318,7 +318,8 @@ export class Game {
       return;
     }
 
-    const coinnumbers = this.checkCoinCollisions();
+    this.checkCoinCollisions();
+    this.checkShoeCollision()
     this.score += this.speed * delta;
     this.ui.updateScore(Math.floor(this.score));
     this.ui.updateCoinScore(this.coinScore);
@@ -384,6 +385,18 @@ export class Game {
       this.coinScore += coinsCollected * this.coinValue;
     }
     return coinsCollected;
+  }
+
+  checkShoeCollision() {
+    const collision = this.obstacleManager.checkShoeCollision(
+      this.player.position,
+      this.player.isJumping
+    );
+    if (collision) {
+      console.log("Collision detected!");
+    } else {
+      console.log("No collision.");
+    }
   }
 
   gameOver() {
