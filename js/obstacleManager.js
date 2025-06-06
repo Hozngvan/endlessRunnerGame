@@ -17,7 +17,7 @@ export class ObstacleManager {
 
   init() {
     // Tạo sẵn 100 coin trong coinPool
-    for (let i = 0; i < 100; i++) {
+    for (let i = 0; i < 500; i++) {
       const coin = this.createCoin(0, 0);
       coin.visible = false;
       this.coinPool.push(coin);
