@@ -67,19 +67,78 @@ export class ObstacleManager {
   }
 
   createShoe(lane, z) {
-    const geometry = new THREE.BoxGeometry(0.5, 0.5, 0.5);
-    const material = new THREE.MeshStandardMaterial({
-      color: 0x00ff00, // Màu xanh lá cho giày
+    // Create a group to hold the arrow parts
+    const arrowGroup = new THREE.Group();
+
+    // Vertical cylinder for the arrow shaft
+    const shaftGeometry = new THREE.CylinderGeometry(0.1, 0.1, 0.6, 32);
+    const arrowMaterial = new THREE.MeshStandardMaterial({
+      color: 0x00ff00, // Green for the arrow
       metalness: 0.3,
       roughness: 0.4,
     });
-    const shoe = new THREE.Mesh(geometry, material);
-    shoe.position.set(lane, 1.0, z);
-    shoe.castShadow = true;
-    shoe.receiveShadow = true;
-    shoe.objectType = "shoe";
+    const shaft = new THREE.Mesh(shaftGeometry, arrowMaterial);
+    shaft.position.set(0, 0.3, 0);
+    shaft.castShadow = true;
+    shaft.receiveShadow = true;
+    arrowGroup.add(shaft);
 
-    return shoe;
+    // Left arrowhead cylinder (angled)
+    const headLeftGeometry = new THREE.CylinderGeometry(0.08, 0.08, 0.3, 32);
+    const headLeft = new THREE.Mesh(headLeftGeometry, arrowMaterial);
+    headLeft.position.set(-0.11, 0.45, 0);
+    headLeft.rotation.z = -Math.PI / 4; // 45-degree angle
+    headLeft.castShadow = true;
+    headLeft.receiveShadow = true;
+    arrowGroup.add(headLeft);
+
+    // Right arrowhead cylinder (angled)
+    const headRightGeometry = new THREE.CylinderGeometry(0.08, 0.08, 0.3, 32);
+    const headRight = new THREE.Mesh(headRightGeometry, arrowMaterial);
+    headRight.position.set(0.11, 0.45, 0);
+    headRight.rotation.z = Math.PI / 4; // -45-degree angle
+    headRight.castShadow = true;
+    headRight.receiveShadow = true;
+    arrowGroup.add(headRight);
+
+    // Glowing sphere outline
+    const glowGeometry = new THREE.SphereGeometry(0.7, 32, 32);
+    const glowMaterial = new THREE.ShaderMaterial({
+      uniforms: {
+        glowColor: { value: new THREE.Color(0x00ff00) },
+        intensity: { value: 0.25 },
+      },
+      vertexShader: `
+        varying vec3 vNormal;
+        void main() {
+          vNormal = normalize(normalMatrix * normal);
+          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+        }
+      `,
+      fragmentShader: `
+        uniform vec3 glowColor;
+        uniform float intensity;
+        varying vec3 vNormal;
+        void main() {
+          float glow = pow(1.0 - dot(vNormal, vec3(0, 0, 1)), 2.0) * intensity;
+          gl_FragColor = vec4(glowColor * glow, glow);
+        }
+      `,
+      side: THREE.BackSide,
+      blending: THREE.AdditiveBlending,
+      transparent: true,
+    });
+    const glowSphere = new THREE.Mesh(glowGeometry, glowMaterial);
+    glowSphere.position.set(0, 0.3, 0);
+    arrowGroup.add(glowSphere);
+
+    // Position the entire arrow group
+    arrowGroup.position.set(lane, 1.0, z);
+    arrowGroup.castShadow = true;
+    arrowGroup.receiveShadow = true;
+    arrowGroup.objectType = "shoe";
+
+    return arrowGroup;
   }
 
   getShoeFromPool() {
@@ -157,6 +216,7 @@ export class ObstacleManager {
 
     return false; // Không thể spawn sau max attempts
   }
+  
   
   spawnCoinsOverObstacle(obstacle) {
     const lane = obstacle.position.x;
@@ -387,7 +447,7 @@ export class ObstacleManager {
       );
       vanh.position.set(0, 0.04, 0);
 
-      // === 5. GỘP CÁC PHẦN ===
+      // === 8. GỘP CÁC PHẦN ===
       obstacle = new THREE.Group();
       obstacle.add(
         busBody,

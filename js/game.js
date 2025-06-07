@@ -28,7 +28,7 @@ export class Game {
       end: new THREE.Vector3(),
       lookAt: new THREE.Vector3(0, 0, 0),
       progress: 0,
-      duration: 1.0 // thời gian chuyển cảnh, đơn vị giây
+      duration: 1.0
     };
 
     window.addEventListener("keydown", (event) => {
@@ -92,7 +92,7 @@ export class Game {
     // Setup lighting
     this.setupLighting();
     this.setupNightLighting();
-    this.hideNightLighting()
+    this.hideNightLighting();
 
     // Initialize game components
     this.world = new World(this.scene);   
@@ -151,21 +151,33 @@ export class Game {
   hideDayLighting() {
     if (this.dirLight) this.dirLight.visible = false;
     if (this.ambientLight1) this.ambientLight1.visible = false;
+    if (this.scene.fog) {
+      this.scene.fog.color.set(0x0a0a1a); // Màu sương mù đêm
+    }
   }
 
   showDayLighting() {
     if (this.dirLight) this.dirLight.visible = true;
     if (this.ambientLight1) this.ambientLight1.visible = true;
+    if (this.scene.fog) {
+      this.scene.fog.color.set(0xbbbbbb); // Màu sương mù ban ngày
+    }
   }
 
   hideNightLighting() {
     if (this.moonLight) this.moonLight.visible = false;
     if (this.ambientLight2) this.ambientLight2.visible = false;
+    if (this.scene.fog) {
+      this.scene.fog.color.set(0xbbbbbb); // Màu sương mù ban ngày
+    }
   }
 
   showNightLighting() {
     if (this.moonLight) this.moonLight.visible = true;
     if (this.ambientLight2) this.ambientLight2.visible = true;
+    if (this.scene.fog) {
+      this.scene.fog.color.set(0x0a0a1a); // Màu sương mù đêm
+    }
   }
 
   toggleLighting() {
@@ -295,6 +307,10 @@ export class Game {
       this.ui.updateScore(this.score);
       this.ui.updateCoinScore(this.coinScore);
       this.ui.hideGameOver();
+      // Setup lighting
+      if (this.isNight) {
+        this.toggleLighting();
+      }
       this.fetchTopScores();
       this.animate();
     });
@@ -305,7 +321,7 @@ export class Game {
 
     requestAnimationFrame(() => this.animate());
 
-    const delta = 0.016;
+    const delta = 0.02;
 
     this.speed += this.speedIncrement;
 
@@ -336,10 +352,10 @@ export class Game {
 
     // Switch Day - Night 
     const milestone = Math.floor(this.score / 1000);
-      if (milestone > this.lastLightingMilestone) {
-        this.lastLightingMilestone = milestone;
-        this.toggleLighting();
-      }
+    if (milestone > this.lastLightingMilestone) {
+      this.lastLightingMilestone = milestone;
+      this.toggleLighting();
+    }
 
     if (this.FirstCamera == true) {
       this.updateCamera();

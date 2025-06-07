@@ -29,12 +29,12 @@ export class World {
 
   createSkyBox() {
     this.sky = new Sky();
-    this.sky.scale.setScalar(450000);
+    this.sky.scale.setScalar(4500);
     this.scene.add(this.sky);
 
     const skyUniforms = this.sky.material.uniforms;
     skyUniforms["turbidity"].value = 10;
-    skyUniforms["rayleigh"].value = 2;
+    skyUniforms["rayleigh"].value = 0.5;
     skyUniforms["mieCoefficient"].value = 0.005;
     skyUniforms["mieDirectionalG"].value = 0.8;
 
@@ -51,6 +51,10 @@ export class World {
     this.sunlight = new THREE.DirectionalLight(0xffffff, 1);
     this.sunlight.position.copy(sun);
     this.scene.add(this.sunlight);
+
+    // Tạo sương mù
+    const verticalFog = new THREE.Fog(0xaaaaaa, 50, 80);
+    this.scene.fog = verticalFog;
   }
 
   showDaySkyBox() {
@@ -107,6 +111,10 @@ export class World {
     this.moonLight = new THREE.DirectionalLight(0xaaaaee, 0.8);
     this.moonLight.position.set(-10, 10, -50);
     this.scene.add(this.moonLight);
+
+    // Tạo sương mù
+    const verticalFog = new THREE.Fog(0xffffff, 50, 80);
+    this.scene.fog = verticalFog;
   }
 
   createRoadSegments() {
@@ -560,7 +568,7 @@ export class World {
     const table3 = createTableWithUmbrella();
 
     // Khoảng cách từ mép trước của tòa nhà đến mép đường
-    const roadEdge = 7.5; // Mép đường tại ±7.5 (roadWidth / 2)
+    const roadEdge = 7.5; // Mép đường tại +-7.5 (roadWidth / 2)
     const buildingEdge = d / 2; // Mép trước của tòa nhà
     const offsetFromEdge = 0.5; // Khoảng cách an toàn từ mép đường
     const tableSetRadius = 0.25; // Bán kính của bộ bàn ghế (do ghế có radius = 0.25)
