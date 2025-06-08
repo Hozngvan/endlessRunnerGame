@@ -52,7 +52,24 @@ export class UI {
     this.gameOverElement.style.display = "none";
     this.container.appendChild(this.gameOverElement);
 
-    // Name input form
+    // Background overlay for name input
+    this.backgroundElement = document.createElement("div");
+    this.backgroundElement.style.position = "fixed";
+    this.backgroundElement.style.top = "0";
+    this.backgroundElement.style.left = "0";
+    this.backgroundElement.style.width = "100vw";
+    this.backgroundElement.style.height = "100vh";
+    this.backgroundElement.style.zIndex = "1"; // Đặt nhỏ hơn nameInputElement (z-index: 1000)
+    this.backgroundElement.style.backgroundImage =
+      "url('textures/background.png')";
+    this.backgroundElement.style.backgroundPosition = "center center";
+    this.backgroundElement.style.backgroundRepeat = "no-repeat";
+    this.backgroundElement.style.backgroundSize = "cover";
+    this.backgroundElement.style.display = "none";
+    this.backgroundElement.style.pointerEvents = "none"; // Không chặn thao tác với form
+    this.container.appendChild(this.backgroundElement);
+
+    // Name input form (giữ nguyên z-index: 1000)
     this.nameInputElement = document.createElement("div");
     this.nameInputElement.style.position = "absolute";
     this.nameInputElement.style.top = "50%";
@@ -127,12 +144,15 @@ export class UI {
 
   showNameInput(callback) {
     this.nameInputElement.style.display = "block";
+    if (this.backgroundElement) this.backgroundElement.style.display = "block";
     const startButton = this.nameInputElement.querySelector("#startGame");
     const playerNameInput = this.nameInputElement.querySelector("#playerName");
     startButton.onclick = () => {
       const name = playerNameInput.value.trim();
       if (name) {
         this.nameInputElement.style.display = "none";
+        if (this.backgroundElement)
+          this.backgroundElement.style.display = "none";
         callback(name);
       } else {
         alert("Please enter a name!");
