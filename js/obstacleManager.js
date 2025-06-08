@@ -35,6 +35,8 @@ export class ObstacleManager {
 
     // Thêm Audio cho coin
     this.coinAudio = new Audio("sound/coin_sound.wav");
+    // Thêm Audio cho chết
+    this.deathAudio = new Audio("sound/death_sound.wav");
   }
 
   initPools() {
@@ -790,6 +792,11 @@ export class ObstacleManager {
       if (playerBoundingBox.intersectsBox(obstacleBoundingBox)) {
         if (isJumping && obj.type === "barrier") {
           continue;
+        }
+        // Phát âm thanh chết ngay khi va chạm
+        if (this.deathAudio) {
+          this.deathAudio.currentTime = 0;
+          this.deathAudio.play();
         }
         return true;
       }

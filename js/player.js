@@ -1,28 +1,29 @@
-
-import * as THREE from 'three';
+import * as THREE from "three";
 
 export class Player {
   constructor(scene, initialX) {
     this.scene = scene;
     this.position = new THREE.Vector3(initialX, 0.5, 0);
-    this.targetX = initialX; // Làn chạy 
+    this.targetX = initialX; // Làn chạy
     this.isJumping = false;
     this.jumpHeight = 2.1;
     this.boostedJumpHeight = 4.0;
     this.gravity = 30;
     this.jumpSpeed = 10;
-    this.verticalVelocity = 0; // Speed 
+    this.verticalVelocity = 0; // Speed
     this.jumpBoostActive = false; // Trạng thái tăng cường nhảy
     this.boostDuration = 3; // Thời gian hiệu lực (giây)
     this.boostTimer = 0; // Bộ đếm thời gian
     this.legGroupLeft = new THREE.Group();
     this.legGroupRight = new THREE.Group();
-    
+
     // Create player mesh (simple for now)
     this.createPlayerMesh();
     this.createPlayerLight();
+
+    this.jumpAudio = new Audio("sound/jump_sound.wav"); // Thêm dòng này, đảm bảo file tồn tại
   }
-  
+
   createPlayerLight() {
     this.playerLight = new THREE.PointLight(0xffffaa, 1, 15);
     this.playerLight.position.set(
@@ -85,40 +86,55 @@ export class Player {
     const eyeOffsetY = [0.1, 0.1];
     const eyeOffsetZ = [0.2, 0.2];
     for (let i = 0; i < 2; i++) {
-      const eye = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.1, 0.1), new THREE.MeshLambertMaterial({ color: 0x000000 }));
-      eye.position.set(eyeOffsetX[i], eyeOffsetY[i] + 1.1, eyeOffsetZ[i]-0.5);
+      const eye = new THREE.Mesh(
+        new THREE.BoxGeometry(0.1, 0.1, 0.1),
+        new THREE.MeshLambertMaterial({ color: 0x000000 })
+      );
+      eye.position.set(eyeOffsetX[i], eyeOffsetY[i] + 1.1, eyeOffsetZ[i] - 0.5);
       eye.castShadow = true;
       eye.receiveShadow = true;
       this.mesh.add(eye);
     }
 
-    // Group legs and toes 
+    // Group legs and toes
     this.legGroupLeft.position.set(0, 0, 0);
     this.legGroupRight.position.set(0, 0, 0);
 
     // 2 chân (màu vàng)
-    const leftLeg = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.8, 0.2), yellow);
-    const rightLeg = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.8, 0.2), yellow);
+    const leftLeg = new THREE.Mesh(
+      new THREE.BoxGeometry(0.2, 0.8, 0.2),
+      yellow
+    );
+    const rightLeg = new THREE.Mesh(
+      new THREE.BoxGeometry(0.2, 0.8, 0.2),
+      yellow
+    );
     leftLeg.position.set(-0.25, 0, 0.2);
     rightLeg.position.set(0.25, 0, 0.2);
     leftLeg.castShadow = true;
     rightLeg.castShadow = true;
-    this.legGroupLeft.add(leftLeg); 
-    this.legGroupRight.add(rightLeg);     
+    this.legGroupLeft.add(leftLeg);
+    this.legGroupRight.add(rightLeg);
 
     // 6 ngón chân (3 mỗi chân) — màu cam
     const toeOffsetX = [-0.1, 0, 0.1];
     for (let i = 0; i < 3; i++) {
-      const leftToe = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.05, 0.3), orange);
+      const leftToe = new THREE.Mesh(
+        new THREE.BoxGeometry(0.1, 0.05, 0.3),
+        orange
+      );
       leftToe.position.set(-0.25 + toeOffsetX[i], -0.38, 0.18);
       leftToe.castShadow = true;
       this.legGroupLeft.add(leftToe);
 
-      const rightToe = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.05, 0.3), orange);
+      const rightToe = new THREE.Mesh(
+        new THREE.BoxGeometry(0.1, 0.05, 0.3),
+        orange
+      );
       rightToe.position.set(0.25 + toeOffsetX[i], -0.38, 0.18);
       rightToe.castShadow = true;
       this.legGroupRight.add(rightToe);
-    } 
+    }
     // this.legGroupLeft.position.set(0, 0, -2);
     // this.legGroupRight.position.set(0, 0, -2);
 
@@ -126,7 +142,7 @@ export class Player {
     this.mesh.add(this.legGroupRight, this.legGroupLeft);
     this.scene.add(this.mesh);
   }
-  
+
   activateJumpBoost() {
     this.jumpBoostActive = true;
     this.boostTimer = this.boostDuration;
@@ -144,18 +160,17 @@ export class Player {
         this.verticalVelocity = 0;
       }
     }
-    
+
     // Giảm bộ đếm thời gian tăng cường nhảy
     if (this.jumpBoostActive) {
       console.log("Jump boost active");
       this.boostTimer -= delta;
       if (this.boostTimer <= 0) {
         this.jumpBoostActive = false;
-        
       }
     }
 
-    // Legs animation when running 
+    // Legs animation when running
     const time = Date.now() * 0.01;
     const legSwing = Math.sin(time);
 
@@ -164,27 +179,37 @@ export class Player {
 
     // Handle lane movement (lerp to target position)
     this.position.x += (this.targetX - this.position.x) * 10 * delta;
-    
+
     // Update mesh position
     this.mesh.position.copy(this.position);
 
-    this.playerLight.position.set(this.position.x, this.position.y + 1.5, this.position.z + 2);
+    this.playerLight.position.set(
+      this.position.x,
+      this.position.y + 1.5,
+      this.position.z + 2
+    );
   }
-  
+
   jump() {
     if (!this.isJumping) {
       this.isJumping = true;
-      const currentJumpHeight = this.jumpBoostActive
-        ? this.boostedJumpHeight
-        : this.jumpHeight;
-      this.verticalVelocity = Math.sqrt(2 * this.gravity * currentJumpHeight);
+      this.verticalVelocity = this.jumpBoostActive
+        ? Math.sqrt(2 * this.gravity * this.boostedJumpHeight)
+        : Math.sqrt(2 * this.gravity * this.jumpHeight);
+
+      // Phát âm thanh nhảy ngay lập tức
+      if (this.jumpAudio) {
+        const audio = this.jumpAudio.cloneNode();
+        audio.currentTime = 0;
+        audio.play();
+      }
     }
   }
-  
+
   moveTo(x) {
     this.targetX = x;
   }
-  
+
   reset() {
     this.position.set(0, 0.5, 0);
     this.targetX = 0;
