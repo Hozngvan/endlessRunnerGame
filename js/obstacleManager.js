@@ -23,7 +23,7 @@ export class ObstacleManager {
 
     this.maxCoinPoolSize = 50;
     this.maxShoePoolSize = 5;
-    this.maxObstaclePoolSize = 10; 
+    this.maxObstaclePoolSize = 10;
 
     this.maxOccupiedLanes = 2;
     this.maxShoeAttempts = 5;
@@ -32,6 +32,9 @@ export class ObstacleManager {
 
     // Create some initial objects
     this.init();
+
+    // Thêm Audio cho coin
+    this.coinAudio = new Audio("sound/coin_sound.wav");
   }
 
   initPools() {
@@ -216,8 +219,7 @@ export class ObstacleManager {
 
     return false; // Không thể spawn sau max attempts
   }
-  
-  
+
   spawnCoinsOverObstacle(obstacle) {
     const lane = obstacle.position.x;
     const baseZ = obstacle.position.z;
@@ -357,7 +359,6 @@ export class ObstacleManager {
       // if (Math.random() < 0.5) {
       // this.spawnCoinsOverObstacle(obstacle);
       // }
-
     } else if (type === "block") {
       // === 1. TẠO THÂN XE ===
       const busBody = new THREE.Mesh(
@@ -657,8 +658,8 @@ export class ObstacleManager {
           this.objects.push(obstacle);
           this.obstacleCount[selectedType]++;
           if (selectedType === "barrier" && Math.random() < 0.5) {
-          this.spawnCoinsOverObstacle(obstacle);
-        }
+            this.spawnCoinsOverObstacle(obstacle);
+          }
           return true;
         }
       }
@@ -835,6 +836,11 @@ export class ObstacleManager {
       this.activeCoins.splice(coinIndex, 1);
       const objIndex = this.objects.indexOf(coin);
       if (objIndex !== -1) this.objects.splice(objIndex, 1);
+      // Phát âm thanh khi ăn coin
+      if (this.coinAudio) {
+        this.coinAudio.currentTime = 0;
+        this.coinAudio.play();
+      }
     }
 
     return collectedCoins.length;
