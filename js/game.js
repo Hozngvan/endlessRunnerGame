@@ -335,6 +335,8 @@ export class Game {
 
     this.checkCoinCollisions();
     this.checkShoeCollision();
+    this.checkShieldCollision();
+
     this.score += this.speed * delta;
     this.ui.updateScore(Math.floor(this.score));
     this.ui.updateCoinScore(this.coinScore);
@@ -386,6 +388,7 @@ export class Game {
   }
 
   checkCollisions() {
+    if (this.player.isShieldActive()) return false
     return this.obstacleManager.checkCollision(
       this.player.position,
       this.player.isJumping
@@ -410,9 +413,23 @@ export class Game {
 
     if (collision) {
       this.player.activateJumpBoost();
-      console.log("Collision detected!");
+      // console.log("Collision detected!");
     } else {
-      console.log("No collision.");
+      // console.log("No collision.");
+    }
+  }
+
+  checkShieldCollision() {
+    const collision = this.obstacleManager.checkShieldCollision(
+      this.player.position,
+      this.player.isJumping
+    );
+
+    if (collision) {
+      this.player.activateShield();
+      // console.log("Shield activated!");
+    } else {
+      // console.log("No shield collision.");
     }
   }
 
@@ -437,7 +454,7 @@ export class Game {
       const restartButton = document.querySelector("#restartButton");
       if (restartButton) {
         restartButton.onclick = () => {
-          console.log("da bam");
+          // console.log("da bam");
           this.resetGame();
         };
       }

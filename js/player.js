@@ -14,12 +14,18 @@ export class Player {
     this.jumpBoostActive = false; // Trạng thái tăng cường nhảy
     this.boostDuration = 3; // Thời gian hiệu lực (giây)
     this.boostTimer = 0; // Bộ đếm thời gian
+    this.shieldActive = false; // Trạng thái bong bóng bảo vệ
+    this.shieldDuration = 3; // Thời gian hiệu lực (giây)
+    this.shieldTimer = 0; // Bộ đếm thời gian
     this.legGroupLeft = new THREE.Group();
     this.legGroupRight = new THREE.Group();
+
+    this.shieldMesh = null; // Mesh của bong bóng
 
     // Create player mesh (simple for now)
     this.createPlayerMesh();
     this.createPlayerLight();
+    this.createShieldMesh();
 
     this.jumpAudio = new Audio("sound/jump_sound.wav"); // Thêm dòng này, đảm bảo file tồn tại
   }
@@ -32,6 +38,22 @@ export class Player {
       this.position.z + 2
     );
     this.scene.add(this.playerLight);
+  }
+
+  createShieldMesh() {
+    const geometry = new THREE.SphereGeometry(1.5, 32, 32);
+    const material = new THREE.MeshStandardMaterial({
+      color: 0x00b7eb,
+      transparent: true,
+      opacity: 0.3,
+      metalness: 0.2,
+      roughness: 0.1,
+      side: THREE.DoubleSide,
+    });
+    this.shieldMesh = new THREE.Mesh(geometry, material);
+    this.shieldMesh.position.copy(this.position);
+    this.shieldMesh.visible = false;
+    this.mesh.add(this.shieldMesh); // Thêm shieldMesh vào mesh của player
   }
 
   createPlayerMesh() {
@@ -148,6 +170,12 @@ export class Player {
     this.boostTimer = this.boostDuration;
   }
 
+  activateShield() {
+    this.shieldActive = true;
+    this.shieldTimer = this.shieldDuration;
+    this.shieldMesh.visible = true;
+  }
+
   update(delta) {
     // Handle jumping
     if (this.isJumping) {
@@ -167,6 +195,15 @@ export class Player {
       this.boostTimer -= delta;
       if (this.boostTimer <= 0) {
         this.jumpBoostActive = false;
+      }
+    }
+
+    if (this.shieldActive) {
+      this.shieldTimer -= delta;
+      if (this.shieldTimer <= 0) {
+        console.log("Player is shielded, skipping collision check.");
+        this.shieldActive = false;
+        this.shieldMesh.visible = false;
       }
     }
 
@@ -210,6 +247,10 @@ export class Player {
     this.targetX = x;
   }
 
+  isShieldActive() {
+    return this.shieldActive;
+  }
+
   reset() {
     this.position.set(0, 0.5, 0);
     this.targetX = 0;
@@ -217,6 +258,10 @@ export class Player {
     this.verticalVelocity = 0;
     this.jumpBoostActive = false;
     this.boostTimer = 0;
+    this.shieldActive = false;
+    this.shieldTimer = 0;
+    this.shieldMesh.visible = false;
     this.mesh.position.copy(this.position);
+    this.shieldMesh.position.copy(this.position);
   }
 }

@@ -9,6 +9,8 @@ export class ObstacleManager {
     this.activeCoins = []; // Mảng lưu các coin đang hoạt động
     this.shoePool = []; // Pool cho item giày
     this.activeShoes = []; // Giày đang hoạt động
+    this.shieldPool = []; // Pool cho item khiên
+    this.activeShields = []; // Khiên đang hoạt động
     this.obstaclePools = {
       barrier: [],
       block: [],
@@ -21,12 +23,15 @@ export class ObstacleManager {
     this.obstacleTypes = ["barrier", "block", "fence"];
     this.obstacleCount = { barrier: 0, block: 0, fence: 0 };
 
-    this.maxCoinPoolSize = 50;
-    this.maxShoePoolSize = 5;
+    this.maxCoinPoolSize = 20;
+    this.maxShoePoolSize = 1;
+    this.maxShieldPoolSize = 1;
     this.maxObstaclePoolSize = 10;
 
     this.maxOccupiedLanes = 2;
     this.maxShoeAttempts = 5;
+    this.maxShieldAttempts = 5;
+
     // Tạo pool ban đầu
     this.initPools();
 
@@ -56,6 +61,15 @@ export class ObstacleManager {
       this.shoePool.push(shoe);
     }
 
+    // Tạo pool cho khiên
+    for (let i = 0; i < this.maxShieldPoolSize; i++) {
+      // console.log("Creating shield pool item", i);
+      const shield = this.createShield(0, 0);
+      shield.visible = false;
+      this.scene.remove(shield);
+      this.shieldPool.push(shield);
+    }
+
     // Tạo pool cho obstacle
     this.obstacleTypes.forEach((type) => {
       for (let i = 0; i < this.maxObstaclePoolSize; i++) {
@@ -69,6 +83,102 @@ export class ObstacleManager {
 
   init() {
     this.reset();
+  }
+
+  createShield(lane, z) {
+    // console.log("Creating shield at lane:", lane, "z:", z);
+    const geometry = new THREE.CircleGeometry(0.5, 32); // Mặt phẳng hình tròn
+    const material = new THREE.MeshStandardMaterial({
+      color: 0x1e90ff, // Màu xanh dương cho khiên
+      metalness: 0.5,
+      roughness: 0.3,
+      side: THREE.DoubleSide,
+    });
+    const shield = new THREE.Mesh(geometry, material);
+    shield.rotation.x = Math.PI / 2; // Xoay để nằm ngang
+    shield.position.set(lane, 1.0, z);
+    shield.castShadow = true;
+    shield.receiveShadow = true;
+    shield.objectType = "shield";
+
+    return shield;
+  }
+
+  getShieldFromPool() {
+    if (this.shieldPool.length === 0) {
+      return null;
+    }
+    return this.shieldPool.pop();
+  }
+
+  returnShieldToPool(shield) {
+    shield.visible = false;
+    this.scene.remove(shield);
+    this.shieldPool.push(shield);
+  }
+
+  spawnShield(z = this.spawnDistance) {
+    const minShieldSpacing = 10;
+    const minObstacleSpacing = 1;
+    const minCoinSpacing = 1;
+    const minShoeSpacing = 1;
+
+    const closeShield = this.activeShields.find(
+      (obj) => Math.abs(obj.position.z - z) < minShieldSpacing
+    );
+    if (closeShield) {
+      return false;
+    }
+
+    const occupiedLanes = new Set(
+      this.activeShields
+        .filter((obj) => Math.abs(obj.position.z - z) < minShieldSpacing)
+        .map((obj) => obj.position.x)
+    );
+
+    const availableLanes = this.lanes.filter(
+      (lane) => !occupiedLanes.has(lane)
+    );
+
+    if (availableLanes.length === 0) {
+      return false;
+    }
+
+    for (let attempt = 0; attempt < this.maxShieldAttempts; attempt++) {
+      const laneIndex = Math.floor(Math.random() * availableLanes.length);
+      const lane = availableLanes[laneIndex];
+
+      const tooClose = this.objects.some((obj) => {
+        if (obj.position.x === lane) {
+          const distance = Math.abs(obj.position.z - z);
+          if (obj.objectType === "obstacle" && distance < minObstacleSpacing) {
+            return true;
+          }
+          if (obj.objectType === "coin" && distance < minCoinSpacing) {
+            return true;
+          }
+          if (obj.objectType === "shoe" && distance < minShoeSpacing) {
+            return true;
+          }
+        }
+        return false;
+      });
+
+      if (!tooClose) {
+        const shield = this.getShieldFromPool();
+        if (shield) {
+          shield.position.set(lane, 1.0, z);
+          shield.visible = true;
+          this.scene.add(shield);
+          this.activeShields.push(shield);
+          this.objects.push(shield);
+          this.lastShieldLaneIndex = this.lanes.indexOf(lane);
+          return true;
+        }
+      }
+    }
+
+    return false;
   }
 
   createShoe(lane, z) {
@@ -163,6 +273,7 @@ export class ObstacleManager {
     const minShoeSpacing = 10;
     const minObstacleSpacing = 1;
     const minCoinSpacing = 1;
+    const minShieldSpacing = 1;
 
     // Kiểm tra xem có giày nào quá gần không
     const closeShoe = this.activeShoes.find(
@@ -199,6 +310,9 @@ export class ObstacleManager {
             return true;
           }
           if (obj.objectType === "coin" && distance < minCoinSpacing) {
+            return true;
+          }
+          if (obj.objectType === "shield" && distance < minShieldSpacing) {
             return true;
           }
         }
@@ -587,10 +701,11 @@ export class ObstacleManager {
   }
 
   spawnRandomObstacle(z = this.spawnDistance) {
-    const minSpacing = 30;
-    const minCoinSpacing = 5;
+    const minSpacing = 5;
+    const minCoinSpacing = 3;
     const minShoeSpacing = 1;
-    const maxAttempts = 5;
+    const minShieldSpacing = 1;
+    const maxAttempts = 10;
 
     // Đếm số lane đang có obstacle gần vị trí z
     const occupiedLanes = new Set(
@@ -646,6 +761,9 @@ export class ObstacleManager {
           if (obj.objectType === "shoe" && distance < minShoeSpacing) {
             return true;
           }
+          if (obj.objectType === "shield" && distance < minShieldSpacing) {
+            return true;
+          }
         }
         return false;
       });
@@ -672,8 +790,9 @@ export class ObstacleManager {
 
   spawnCoin(z = this.spawnDistance) {
     const minCoinSpacing = 5;
-    const minObstacleSpacing = 5;
+    const minObstacleSpacing = 3;
     const minShoeSpacing = 1;
+    const minShieldSpacing = 1;
 
     const closeCoin = this.activeCoins.find(
       (obj) => Math.abs(obj.position.z - z) < minCoinSpacing
@@ -704,6 +823,9 @@ export class ObstacleManager {
             return true;
           }
           if (obj.objectType === "shoe" && distance < minShoeSpacing) {
+            return true;
+          }
+          if (obj.objectType === "shield" && distance < minShieldSpacing) {
             return true;
           }
         }
@@ -755,6 +877,25 @@ export class ObstacleManager {
         const index = this.objects.indexOf(shoe);
         if (index !== -1) this.objects.splice(index, 1);
         this.spawnShoe();
+      }
+    }
+
+    for (let i = this.activeShields.length - 1; i >= 0; i--) {
+      const shield = this.activeShields[i];
+
+      // Dựng thẳng khiên
+      shield.rotation.x = 0;
+      shield.rotation.z = 0;
+
+      shield.position.z += speed * delta
+      shield.rotation.y += 2 * delta; // Xoay khiên để dễ nhìn
+
+      if (shield.position.z > this.despawnDistance) {
+        this.returnShieldToPool(shield);
+        this.activeShields.splice(i, 1);
+        const index = this.objects.indexOf(shield);
+        if (index !== -1) this.objects.splice(index, 1);
+        this.spawnShield();
       }
     }
 
@@ -897,6 +1038,50 @@ export class ObstacleManager {
     return collectedShoes.length;
   }
 
+  checkShieldCollision(playerPosition) {
+    const playerBoundingBox = new THREE.Box3().setFromCenterAndSize(
+      playerPosition,
+      new THREE.Vector3(1, 2, 1)
+    );
+
+    const collectedShields = [];
+
+    for (let i = 0; i < this.activeShields.length; i++) {
+      const shield = this.activeShields[i];
+
+      if (shield.position.z < -1 || shield.position.z > 1) {
+        continue;
+      }
+
+      const originalBox = new THREE.Box3().setFromObject(shield);
+      const shrinkFactor = 0.4;
+      const center = originalBox.getCenter(new THREE.Vector3());
+      const size = originalBox
+        .getSize(new THREE.Vector3())
+        .multiplyScalar(shrinkFactor);
+      const shieldBoundingBox = new THREE.Box3().setFromCenterAndSize(
+        center,
+        size
+      );
+
+      if (playerBoundingBox.intersectsBox(shieldBoundingBox)) {
+        collectedShields.push(i);
+      }
+    }
+
+    for (let i = collectedShields.length - 1; i >= 0; i--) {
+      const shieldIndex = collectedShields[i];
+      const shield = this.activeShields[shieldIndex];
+      this.returnShieldToPool(shield);
+      this.activeShields.splice(shieldIndex, 1);
+      const objIndex = this.objects.indexOf(shield);
+      if (objIndex !== -1) this.objects.splice(objIndex, 1);
+      this.spawnShield();
+    }
+
+    return collectedShields.length;
+  }
+
   reset() {
     // Đưa coin về pool
     while (this.activeCoins.length > 0) {
@@ -911,6 +1096,14 @@ export class ObstacleManager {
       const shoe = this.activeShoes.pop();
       this.returnShoeToPool(shoe);
       const index = this.objects.indexOf(shoe);
+      if (index !== -1) this.objects.splice(index, 1);
+    }
+
+    // Đưa khiên về pool
+    while (this.activeShields.length > 0) {
+      const shield = this.activeShields.pop();
+      this.returnShieldToPool(shield);
+      const index = this.objects.indexOf(shield);
       if (index !== -1) this.objects.splice(index, 1);
     }
 
@@ -936,9 +1129,11 @@ export class ObstacleManager {
     }
 
     for (let i = 0; i < 1; i++) {
-      // if (Math.random() < 0.2) {
       this.spawnShoe(-15 - i * 10);
-      // }
+    }
+
+    for (let i = 0; i < 1; i++) {
+      this.spawnShield(-15 - i * 10);
     }
   }
 }
