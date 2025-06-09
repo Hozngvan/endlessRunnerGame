@@ -22,6 +22,7 @@ export class Player {
     this.legGroupRight = new THREE.Group();
 
     this.shieldMesh = null; // Mesh của bong bóng
+    this.boostMesh = null; // Mesh của giày tăng tốc
 
     // Create player mesh (simple for now)
     this.createPlayerMesh();
@@ -282,6 +283,7 @@ export class Player {
     this.shieldActive = false;
     this.shieldTimer = 0;
     this.shieldMesh.visible = false;
+    this.boostMesh.visible = false;
     this.mesh.position.copy(this.position);
     this.shieldMesh.position.copy(this.position);
   }
