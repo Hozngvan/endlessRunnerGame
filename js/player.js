@@ -24,13 +24,37 @@ export class Player {
     this.shieldMesh = null; // Mesh của bong bóng
     this.boostMesh = null; // Mesh của giày tăng tốc
 
-    // Create player mesh (simple for now)
-    this.createPlayerMesh();
+    // const chosenCharacter = window.selectedCharacter;
+    // if (chosenCharacter === "uiter") {
+    //   console.log("Using default character: UITer =", chosenCharacter);
+    //   this.createPlayerMesh_uiter(); // UITer
+    // } else if (chosenCharacter === "doraemon") {
+    //   console.log("Using default character: Doraemon =", chosenCharacter);
+    //   this.createPlayerMesh_doraemon(); // Doraemon
+    // } else {
+    //   console.log("Using default character: Chicken =", chosenCharacter);
+    //   this.createPlayerMesh_chicken(); // Mặc định là Chicken
+    // }
+
+    // this.createBoostMesh();
+    // this.createPlayerLight();
+    // this.createShieldMesh();
+
+    this.jumpAudio = new Audio("sound/jump_sound.wav"); // Thêm dòng này, đảm bảo file tồn tại
+  }
+
+  initializeCharacter(chosenCharacter) {
+    if (chosenCharacter === "uiter") {
+      this.createPlayerMesh_uiter();
+    } else if (chosenCharacter === "doraemon") {
+      this.createPlayerMesh_doraemon();
+    } else {
+      this.createPlayerMesh_chicken();
+    }
+
     this.createBoostMesh();
     this.createPlayerLight();
     this.createShieldMesh();
-
-    this.jumpAudio = new Audio("sound/jump_sound.wav"); // Thêm dòng này, đảm bảo file tồn tại
   }
 
   createPlayerLight() {
@@ -75,15 +99,115 @@ export class Player {
     this.mesh.add(this.boostMesh); // Thêm boostMesh vào mesh của player
   }
 
-  createPlayerMesh() {
-    // Player body chicken
-    // const bodyGeometry = new THREE.BoxGeometry(1, 1, 1);
-    // const bodyMaterial = new THREE.MeshLambertMaterial({ color: 0x3498db });
-    // this.mesh = new THREE.Mesh(bodyGeometry, bodyMaterial);
-    // this.mesh.position.copy(this.position);
-    // this.mesh.castShadow = true;
-    // this.scene.add(this.mesh);
+  createPlayerMesh_doraemon() {
+    this.mesh = new THREE.Group();
+    this.mesh.position.copy(this.position);
 
+    const blue = new THREE.MeshLambertMaterial({ color: 0x2196f3 }); // Màu xanh Doraemon
+    const white = new THREE.MeshLambertMaterial({ color: 0xffffff });
+
+    // === Thân (hình cầu to) ===
+    const body = new THREE.Mesh(new THREE.SphereGeometry(0.9, 32, 32), blue);
+    body.position.set(0, 0.7, 0);
+    body.castShadow = true;
+    this.mesh.add(body);
+
+    // === Đầu (hình cầu nhỏ hơn) ===
+    const head = new THREE.Mesh(new THREE.SphereGeometry(0.7, 32, 32), blue);
+    head.position.set(0, 2.1, 0);
+    head.castShadow = true;
+    this.mesh.add(head);
+
+    // === Tay trái ===
+    const leftArm = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.18, 0.18, 0.6, 32),
+      blue
+    );
+    leftArm.rotation.z = Math.PI / 3;
+    leftArm.position.set(-0.8, 1.2, 0);
+    leftArm.castShadow = true;
+    this.mesh.add(leftArm);
+
+    const leftHand = new THREE.Mesh(new THREE.SphereGeometry(0.25, 16, 16), white);
+    leftHand.position.set(-1, 1.3, 0);
+    leftHand.castShadow = true;
+    this.mesh.add(leftHand);
+
+    // === Tay phải ===
+    const rightArm = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.18, 0.18, 0.6, 32),
+      blue
+    );
+    rightArm.rotation.z = -Math.PI / 3;
+    rightArm.position.set(0.8, 1.2, 0);
+    rightArm.castShadow = true;
+    this.mesh.add(rightArm);
+
+    const rightHand = new THREE.Mesh(new THREE.SphereGeometry(0.25, 16, 16), white);
+    rightHand.position.set(1, 1.3, 0);
+    rightHand.castShadow = true;
+    this.mesh.add(rightHand);
+
+    // === Chân trái ===
+    this.legGroupLeft = new THREE.Group();
+
+    const leftLeg = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.18, 0.18, 0.6, 32),
+      blue
+    );
+    leftLeg.position.set(0, 0.3, 0);
+    leftLeg.castShadow = true;
+
+    const leftFoot = new THREE.Mesh(
+      new THREE.SphereGeometry(0.22, 16, 16),
+      white
+    );
+    leftFoot.scale.set(1.2, 0.7, 1.2); // Dẹt phần chân
+    leftFoot.position.set(0, -0.1, 0);
+    leftFoot.castShadow = true;
+
+    this.legGroupLeft.add(leftLeg);
+    this.legGroupLeft.add(leftFoot);
+    this.legGroupLeft.position.set(-0.4, -0.3, 0);
+    this.mesh.add(this.legGroupLeft);
+
+    // === Chân phải ===
+    this.legGroupRight = new THREE.Group();
+
+    const rightLeg = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.18, 0.18, 0.6, 32),
+      blue
+    );
+    rightLeg.position.set(0, 0.3, 0);
+    rightLeg.castShadow = true;
+
+    const rightFoot = new THREE.Mesh(
+      new THREE.SphereGeometry(0.22, 16, 16),
+      white
+    );
+    rightFoot.scale.set(1.2, 0.7, 1.2);
+    rightFoot.position.set(0, -0.1, 0);
+    rightFoot.castShadow = true;
+
+    this.legGroupRight.add(rightLeg);
+    this.legGroupRight.add(rightFoot);
+    this.legGroupRight.position.set(0.4, -0.3, 0);
+    this.mesh.add(this.legGroupRight);
+
+    // Đuôi cầu đỏ
+    const tail = new THREE.Mesh(
+      new THREE.SphereGeometry(0.17, 16, 16),
+      new THREE.MeshLambertMaterial({ color: 0xff0000 })
+    ); 
+    tail.position.set(0, 0.6, 1.2);
+    this.mesh.add(tail);
+
+    // Thêm vào scene
+    this.mesh.scale.set(0.5, 0.5, 0.5); // Thu nhỏ Doraemon
+    this.scene.add(this.mesh);
+  }
+
+  createPlayerMesh_chicken() {
     this.mesh = new THREE.Group(); // Nhóm toàn bộ con gà
     this.mesh.position.copy(this.position);
 
@@ -137,6 +261,9 @@ export class Player {
       this.mesh.add(eye);
     }
 
+    this.legGroupLeft = new THREE.Group(); // <-- Tạo mới Group để không dính dữ liệu cũ
+    this.legGroupRight = new THREE.Group();
+
     // Group legs and toes
     this.legGroupLeft.position.set(0, 0, 0);
     this.legGroupRight.position.set(0, 0, 0);
@@ -184,6 +311,90 @@ export class Player {
     this.scene.add(this.mesh);
   }
 
+  createPlayerMesh_uiter() {
+    this.mesh = new THREE.Group(); // Nhóm toàn bộ nhân vật
+    this.mesh.position.copy(this.position);
+
+    const texture = new THREE.TextureLoader().load("textures/img/uit.jpeg");
+    texture.wrapS = texture.wrapT = THREE.ClampToEdgeWrapping;
+    texture.minFilter = THREE.LinearFilter;
+    const shirt = new THREE.MeshLambertMaterial({ 
+      map: texture,
+      transparent: true 
+    });
+    const plane = new THREE.Mesh(new THREE.PlaneGeometry(0.6, 0.6), shirt);
+    plane.position.set(0, 0.6, 0.3);
+    this.mesh.add(plane);
+
+
+    const skin = new THREE.MeshLambertMaterial({ color: 0xffdbac });
+    const pants = new THREE.MeshLambertMaterial({ color: 0x222222 });
+    const shoes = new THREE.MeshLambertMaterial({ color: 0x555555 });
+    const hair = new THREE.MeshLambertMaterial({ color: 0x2e2b2b });
+
+    // Thân
+    const body = new THREE.Mesh(new THREE.BoxGeometry(1, 1.2, 0.5), new THREE.MeshLambertMaterial({ color: 0xffffff }));
+    body.position.set(0, 0.6, 0);
+    body.castShadow = true;
+    this.mesh.add(body);
+
+    // Đầu
+    const head = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.5, 0.7), skin);
+    head.position.set(0, 1.6, 0);
+    head.castShadow = true;
+    this.mesh.add(head);
+
+    // Tóc
+    const hairTop = new THREE.Mesh(new THREE.BoxGeometry(0.72, 0.2, 0.72), hair);
+    hairTop.position.set(0, 2.05, 0);
+    this.mesh.add(hairTop);
+
+    // Tay
+    const leftArm = new THREE.Mesh(new THREE.BoxGeometry(0.25, 0.8, 0.25), skin);
+    leftArm.position.set(-0.65, 0.6, 0);
+    leftArm.castShadow = true;
+    this.mesh.add(leftArm);
+
+    const rightArm = new THREE.Mesh(new THREE.BoxGeometry(0.25, 0.8, 0.25), skin);
+    rightArm.position.set(0.65, 0.6, 0);
+    rightArm.castShadow = true;
+    this.mesh.add(rightArm);
+
+    // === Chân trái + giày trái ===
+    this.legGroupLeft = new THREE.Group();
+    const leftLeg = new THREE.Mesh(new THREE.BoxGeometry(0.4, 1, 0.4), pants);
+    leftLeg.position.set(0, 0.3, 0); // Tương đối trong group
+    leftLeg.castShadow = true;
+
+    const leftShoe = new THREE.Mesh(new THREE.BoxGeometry(0.45, 0.2, 0.45), shoes);
+    leftShoe.position.set(0, -0.2, 0); // Tương đối trong group
+    leftShoe.castShadow = true;
+
+    this.legGroupLeft.add(leftLeg);
+    this.legGroupLeft.add(leftShoe);
+    this.legGroupLeft.position.set(-0.25, -0.7, 0); // Vị trí chân trái trong toàn bộ mesh
+    this.mesh.add(this.legGroupLeft);
+
+    // === Chân phải + giày phải ===
+    this.legGroupRight = new THREE.Group();
+    const rightLeg = new THREE.Mesh(new THREE.BoxGeometry(0.4, 1, 0.4), pants);
+    rightLeg.position.set(0, 0.3, 0);
+    rightLeg.castShadow = true;
+
+    const rightShoe = new THREE.Mesh(new THREE.BoxGeometry(0.45, 0.2, 0.45), shoes);
+    rightShoe.position.set(0, -0.2, 0);
+    rightShoe.castShadow = true;
+
+    this.legGroupRight.add(rightLeg);
+    this.legGroupRight.add(rightShoe);
+    this.legGroupRight.position.set(0.25, -0.7, 0); // Vị trí chân phải
+    this.mesh.add(this.legGroupRight);
+
+    // Thêm vào scene
+    this.mesh.scale.set(0.6, 0.6, 0.6); // Tỷ lệ nhân vật
+    this.scene.add(this.mesh);
+  }
+
   activateJumpBoost() {
     this.jumpBoostActive = true;
     this.boostTimer = this.boostDuration;
@@ -222,7 +433,7 @@ export class Player {
 
     if (this.shieldActive) {
       this.shieldTimer -= delta;
-      if (this.shieldTimer <= 0) {
+      if (this.shieldTimer <= 0.1) {
         console.log("Player is shielded, skipping collision check.");
         this.shieldActive = false;
         this.shieldMesh.visible = false;
@@ -286,5 +497,15 @@ export class Player {
     this.boostMesh.visible = false;
     this.mesh.position.copy(this.position);
     this.shieldMesh.position.copy(this.position);
+    if (this.mesh) {
+      this.scene.remove(this.mesh);
+      this.mesh.traverse((child) => {
+        if (child.isMesh) {
+          child.geometry.dispose();
+          child.material.dispose();
+        }
+      });
+      this.mesh = null;
+    }
   }
 }

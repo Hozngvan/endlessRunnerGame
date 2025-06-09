@@ -295,7 +295,7 @@ export class Game {
   }
 
   start() {
-    this.ui.showNameInput((name) => {
+    this.ui.showNameInput((name, character) => {
       this.playerName = name;
       this.isGameOver = false;
       this.score = 0;
@@ -303,11 +303,13 @@ export class Game {
       this.speed = this.baseSpeed;
       this.currentLane = 1;
       this.player.moveTo(this.lanes[this.currentLane]);
+      this.player.initializeCharacter(character);
       this.lastScoreUpdate = 0;
       this.minScoreToUpdate = 0;
       this.ui.updateScore(this.score);
       this.ui.updateCoinScore(this.coinScore);
       this.ui.hideGameOver();
+      this.lastLightingMilestone = 0;
       // Setup lighting
       if (this.isNight) {
         this.toggleLighting();

@@ -14,6 +14,23 @@ export class World {
     this.hideNightSkyBox();
     this.createRoadSegments();
     this.createBuildings();
+    this.createFogLayer();
+  }
+
+  createFogLayer() {
+    const geometry = new THREE.SphereGeometry(180, 32, 32);
+    const material = new THREE.MeshBasicMaterial({
+      color: 0x555555,
+      transparent: true,
+      opacity: 0.8,
+      depthWrite: false,
+      side: THREE.BackSide,
+    });
+
+    const fogLayer = new THREE.Mesh(geometry, material);
+    fogLayer.rotation.x = Math.PI / 2; // hướng xuống
+    fogLayer.position.set(0, 0, 0); 
+    this.scene.add(fogLayer);
   }
 
   createGround() {

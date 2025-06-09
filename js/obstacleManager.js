@@ -87,15 +87,35 @@ export class ObstacleManager {
 
   createShield(lane, z) {
     // console.log("Creating shield at lane:", lane, "z:", z);
-    const geometry = new THREE.CircleGeometry(0.5, 32); // Mặt phẳng hình tròn
-    const material = new THREE.MeshStandardMaterial({
-      color: 0x1e90ff, // Màu xanh dương cho khiên
+    // Lõi khiên - đĩa tròn phẳng
+    const coreGeometry = new THREE.CircleGeometry(0.4, 32);
+    const coreMaterial = new THREE.MeshStandardMaterial({
+      color: 0x1e90ff, // Xanh dương đậm
       metalness: 0.5,
       roughness: 0.3,
+      side: THREE.DoubleSide
+    });
+    const core = new THREE.Mesh(coreGeometry, coreMaterial);
+    //core.rotation.x = Math.PI / 2;
+    core.position.set(0, 0, 0); // Trung tâm của khiên
+
+    // Vỏ bảo vệ - khối cầu mỏng, bán trong suốt
+    const shellGeometry = new THREE.SphereGeometry(0.6, 32, 32);
+    const shellMaterial = new THREE.MeshStandardMaterial({
+      color: 0x87cefa, // Xanh dương nhạt
+      transparent: true,
+      opacity: 0.3,
+      roughness: 0.1,
+      metalness: 0.1,
       side: THREE.DoubleSide,
     });
-    const shield = new THREE.Mesh(geometry, material);
-    shield.rotation.x = Math.PI / 2; // Xoay để nằm ngang
+    const shell = new THREE.Mesh(shellGeometry, shellMaterial);
+    shell.position.set(0, 0, 0);
+
+    // Nhóm cả hai lại thành một khiên hoàn chỉnh
+    const shield = new THREE.Group();
+    shield.add(core);
+    shield.add(shell);
     shield.position.set(lane, 1.0, z);
     shield.castShadow = true;
     shield.receiveShadow = true;

@@ -105,6 +105,31 @@ export class UI {
           "
           placeholder="Your name"
         />
+
+        <!-- Dropdown chọn nhân vật -->
+        <div style="display: flex; align-items: center; justify-content: center; margin-bottom: 20px;">
+        <label for="characterSelect" style="margin-right: 10px; font-size: 16px; color: #fff;">
+          Character:
+        </label>
+        <select 
+          id="characterSelect"
+          style="
+            flex: 1;
+            padding: 12px 15px;
+            font-size: 16px;
+            border: none;
+            border-radius: 8px;
+            background-color: #333;
+            color: #fff;
+            outline: none;
+          "
+        >
+          <option value="chicken" selected>Chicken</option>
+          <option value="uiter">UITer</option>
+          <option value="doraemon">Doraemon</option>
+        </select>
+      </div>
+
         <br>
         <button 
           id="startGame" 
@@ -126,6 +151,13 @@ export class UI {
       </div>
     `;
     this.container.appendChild(this.nameInputElement);
+    // Add event listener for character selection
+    const selectElement = document.getElementById("characterSelect");
+    window.selectedCharacter = selectElement.value; // Lưu giá trị mặc định
+    selectElement.addEventListener("change", (event) => {
+      window.selectedCharacter = event.target.value; // Cập nhật giá trị khi chọn
+      console.log("Selected character:", window.selectedCharacter);
+    });
 
     // Controls hint
     this.controlsElement = document.createElement("div");
@@ -151,11 +183,13 @@ export class UI {
     // Hàm bắt đầu game
     const startGame = () => {
       const name = playerNameInput.value.trim();
+      const character = characterSelect.value;
+
       if (name) {
         this.nameInputElement.style.display = "none";
         if (this.backgroundElement)
           this.backgroundElement.style.display = "none";
-        callback(name);
+        callback(name, character);
       } else {
         alert("Please enter a name!");
       }
