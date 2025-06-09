@@ -388,7 +388,7 @@ export class Game {
   }
 
   checkCollisions() {
-    if (this.player.isShieldActive()) return false
+    if (this.player.isShieldActive()) return false;
     return this.obstacleManager.checkCollision(
       this.player.position,
       this.player.isJumping
@@ -454,9 +454,17 @@ export class Game {
       const restartButton = document.querySelector("#restartButton");
       if (restartButton) {
         restartButton.onclick = () => {
-          // console.log("da bam");
           this.resetGame();
         };
+
+        // Thêm sự kiện phím Enter để restart
+        const handleEnterRestart = (e) => {
+          if (e.key === "Enter") {
+            this.resetGame();
+            window.removeEventListener("keydown", handleEnterRestart);
+          }
+        };
+        window.addEventListener("keydown", handleEnterRestart);
       }
     });
   }
