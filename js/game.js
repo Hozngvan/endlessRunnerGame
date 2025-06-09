@@ -30,7 +30,7 @@ export class Game {
       progress: 0,
       duration: 1.0,
     };
-    this.endgameAudio = new Audio("sound/among.mp3");
+    this.endgameAudio = new Audio("sound/complete.wav");
     this.runningAudio = new Audio("sound/Sakura-Girl-Daisy-chosic.mp3"); // Thêm dòng này
     this.runningAudio.loop = true; // Lặp liên tục
 
