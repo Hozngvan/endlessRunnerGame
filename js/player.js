@@ -14,6 +14,7 @@ export class Player {
     this.jumpBoostActive = false; // Trạng thái tăng cường nhảy
     this.boostDuration = 3; // Thời gian hiệu lực (giây)
     this.boostTimer = 0; // Bộ đếm thời gian
+    this.boostActive = false; // Trạng thái giày tăng tốc
     this.shieldActive = false; // Trạng thái bong bóng bảo vệ
     this.shieldDuration = 3; // Thời gian hiệu lực (giây)
     this.shieldTimer = 0; // Bộ đếm thời gian
@@ -24,6 +25,7 @@ export class Player {
 
     // Create player mesh (simple for now)
     this.createPlayerMesh();
+    this.createBoostMesh();
     this.createPlayerLight();
     this.createShieldMesh();
 
@@ -54,6 +56,22 @@ export class Player {
     this.shieldMesh.position.copy(this.position);
     this.shieldMesh.visible = false;
     this.mesh.add(this.shieldMesh); // Thêm shieldMesh vào mesh của player
+  }
+
+  createBoostMesh() {
+    const geometry = new THREE.SphereGeometry(1, 32, 32);
+    const material = new THREE.MeshStandardMaterial({
+      color: 0x00ff00,
+      transparent: true,
+      opacity: 0.3,
+      metalness: 0.2,
+      roughness: 0.1,
+      side: THREE.DoubleSide,
+    });
+    this.boostMesh = new THREE.Mesh(geometry, material);
+    this.boostMesh.position.copy(this.position);
+    this.boostMesh.visible = false;
+    this.mesh.add(this.boostMesh); // Thêm boostMesh vào mesh của player
   }
 
   createPlayerMesh() {
@@ -168,6 +186,7 @@ export class Player {
   activateJumpBoost() {
     this.jumpBoostActive = true;
     this.boostTimer = this.boostDuration;
+    this.boostMesh.visible = true;
   }
 
   activateShield() {
@@ -194,7 +213,9 @@ export class Player {
       console.log("Jump boost active");
       this.boostTimer -= delta;
       if (this.boostTimer <= 0) {
+        console.log("Player is jump booost");
         this.jumpBoostActive = false;
+        this.boostMesh.visible = false;
       }
     }
 
