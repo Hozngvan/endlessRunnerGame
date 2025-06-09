@@ -147,7 +147,9 @@ export class UI {
     if (this.backgroundElement) this.backgroundElement.style.display = "block";
     const startButton = this.nameInputElement.querySelector("#startGame");
     const playerNameInput = this.nameInputElement.querySelector("#playerName");
-    startButton.onclick = () => {
+
+    // Hàm bắt đầu game
+    const startGame = () => {
       const name = playerNameInput.value.trim();
       if (name) {
         this.nameInputElement.style.display = "none";
@@ -156,6 +158,15 @@ export class UI {
         callback(name);
       } else {
         alert("Please enter a name!");
+      }
+    };
+
+    startButton.onclick = startGame;
+
+    // Thêm sự kiện Enter cho input
+    playerNameInput.onkeydown = (e) => {
+      if (e.key === "Enter") {
+        startGame();
       }
     };
   }
