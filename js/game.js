@@ -31,6 +31,8 @@ export class Game {
       duration: 1.0,
     };
     this.endgameAudio = new Audio("sound/among.mp3");
+    this.runningAudio = new Audio("sound/Sakura-Girl-Daisy-chosic.mp3"); // Thêm dòng này
+    this.runningAudio.loop = true; // Lặp liên tục
 
     window.addEventListener("keydown", (event) => {
       if (event.key === "c" || event.key === "C") {
@@ -312,6 +314,12 @@ export class Game {
       }
       this.fetchTopScores();
       this.animate();
+
+      // Phát nhạc nền chạy khi bắt đầu game
+      if (this.runningAudio) {
+        this.runningAudio.currentTime = 0;
+        this.runningAudio.play();
+      }
     });
   }
 
@@ -435,6 +443,12 @@ export class Game {
 
   gameOver() {
     this.isGameOver = true;
+
+    // Dừng nhạc nền chạy khi game over
+    if (this.runningAudio) {
+      this.runningAudio.pause();
+      this.runningAudio.currentTime = 0;
+    }
 
     // Phát âm thanh endgame ngay khi game over
     if (this.endgameAudio) {
