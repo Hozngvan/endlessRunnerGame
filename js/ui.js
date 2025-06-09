@@ -169,6 +169,9 @@ export class UI {
         startGame();
       }
     };
+
+    // Tự động focus vào ô nhập tên mỗi khi trang start hiện ra
+    playerNameInput.focus();
   }
 
   updateScore(score) {
