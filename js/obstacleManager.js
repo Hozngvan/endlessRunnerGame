@@ -852,40 +852,40 @@ export class ObstacleManager {
   }
 
   update(delta, speed) {
-  for (let i = this.objects.length - 1; i >= 0; i--) {
-    const obj = this.objects[i];
-    obj.position.z += speed * delta;
-    if (obj.objectType !== "obstacle") {
-      obj.rotation.y += 2 * delta; // Xoay cho coin, shoe, shield
-    }
-    if (obj.objectType === "shield") {
-      obj.rotation.x = 0;
-      obj.rotation.z = 0;
-    }
-
-    if (obj.position.z > this.despawnDistance) {
-      if (obj.objectType === "coin") {
-        this.returnCoinToPool(obj);
-        this.activeCoins.splice(this.activeCoins.indexOf(obj), 1);
-        this.spawnCoin();
-      } else if (obj.objectType === "shoe") {
-        this.returnShoeToPool(obj);
-        this.activeShoes.splice(this.activeShoes.indexOf(obj), 1);
-        this.spawnShoe();
-      } else if (obj.objectType === "shield") {
-        this.returnShieldToPool(obj);
-        this.activeShields.splice(this.activeShields.indexOf(obj), 1);
-        this.spawnShield();
-      } else if (obj.objectType === "obstacle") {
-        this.obstacleCount[obj.type]--;
-        this.returnObstacleToPool(obj);
-        this.activeObstacles.splice(this.activeObstacles.indexOf(obj), 1);
-        this.spawnRandomObstacle();
+    for (let i = this.objects.length - 1; i >= 0; i--) {
+      const obj = this.objects[i];
+      obj.position.z += speed * delta;
+      if (obj.objectType !== "obstacle") {
+        obj.rotation.y += 2 * delta; // Xoay cho coin, shoe, shield
       }
-      this.objects.splice(i, 1);
+      if (obj.objectType === "shield") {
+        obj.rotation.x = 0;
+        obj.rotation.z = 0;
+      }
+
+      if (obj.position.z > this.despawnDistance) {
+        if (obj.objectType === "coin") {
+          this.returnCoinToPool(obj);
+          this.activeCoins.splice(this.activeCoins.indexOf(obj), 1);
+          this.spawnCoin();
+        } else if (obj.objectType === "shoe") {
+          this.returnShoeToPool(obj);
+          this.activeShoes.splice(this.activeShoes.indexOf(obj), 1);
+          this.spawnShoe();
+        } else if (obj.objectType === "shield") {
+          this.returnShieldToPool(obj);
+          this.activeShields.splice(this.activeShields.indexOf(obj), 1);
+          this.spawnShield();
+        } else if (obj.objectType === "obstacle") {
+          this.obstacleCount[obj.type]--;
+          this.returnObstacleToPool(obj);
+          this.activeObstacles.splice(this.activeObstacles.indexOf(obj), 1);
+          this.spawnRandomObstacle();
+        }
+        this.objects.splice(i, 1);
+      }
     }
   }
-}
 
   checkCollision(playerPosition, isJumping) {
     const playerBoundingBox = new THREE.Box3().setFromCenterAndSize(
@@ -1006,6 +1006,11 @@ export class ObstacleManager {
       const objIndex = this.objects.indexOf(shoe);
       if (objIndex !== -1) this.objects.splice(objIndex, 1);
       this.spawnShoe();
+      // Phát âm thanh coin khi ăn shoe
+      if (this.coinAudio) {
+        this.coinAudio.currentTime = 0;
+        this.coinAudio.play();
+      }
     }
 
     return collectedShoes.length;
@@ -1050,6 +1055,11 @@ export class ObstacleManager {
       const objIndex = this.objects.indexOf(shield);
       if (objIndex !== -1) this.objects.splice(objIndex, 1);
       this.spawnShield();
+      // Phát âm thanh coin khi ăn shield
+      if (this.coinAudio) {
+        this.coinAudio.currentTime = 0;
+        this.coinAudio.play();
+      }
     }
 
     return collectedShields.length;
