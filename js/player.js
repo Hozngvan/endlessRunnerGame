@@ -107,13 +107,13 @@ export class Player {
     const white = new THREE.MeshLambertMaterial({ color: 0xffffff });
 
     // === Thân (hình cầu to) ===
-    const body = new THREE.Mesh(new THREE.SphereGeometry(0.9, 32, 32), blue);
+    const body = new THREE.Mesh(new THREE.SphereGeometry(0.8, 32, 32), blue);
     body.position.set(0, 0.7, 0);
     body.castShadow = true;
     this.mesh.add(body);
 
     // === Đầu (hình cầu nhỏ hơn) ===
-    const head = new THREE.Mesh(new THREE.SphereGeometry(0.7, 32, 32), blue);
+    const head = new THREE.Mesh(new THREE.SphereGeometry(1, 32, 32), blue);
     head.position.set(0, 2.1, 0);
     head.castShadow = true;
     this.mesh.add(head);
@@ -208,6 +208,14 @@ export class Player {
   }
 
   createPlayerMesh_chicken() {
+    // Player body chicken
+    // const bodyGeometry = new THREE.BoxGeometry(1, 1, 1);
+    // const bodyMaterial = new THREE.MeshLambertMaterial({ color: 0x3498db });
+    // this.mesh = new THREE.Mesh(bodyGeometry, bodyMaterial);
+    // this.mesh.position.copy(this.position);
+    // this.mesh.castShadow = true;
+    // this.scene.add(this.mesh);
+
     this.mesh = new THREE.Group(); // Nhóm toàn bộ con gà
     this.mesh.position.copy(this.position);
 
@@ -260,9 +268,6 @@ export class Player {
       eye.receiveShadow = true;
       this.mesh.add(eye);
     }
-
-    this.legGroupLeft = new THREE.Group(); // <-- Tạo mới Group để không dính dữ liệu cũ
-    this.legGroupRight = new THREE.Group();
 
     // Group legs and toes
     this.legGroupLeft.position.set(0, 0, 0);

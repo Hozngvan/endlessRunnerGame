@@ -609,7 +609,10 @@ export class ObstacleManager {
     } else if (type === "fence") {
       obstacle = new THREE.Group();
 
-      const texture = new THREE.TextureLoader().load('textures/img/pepsi.jpg');
+      const texture = new THREE.TextureLoader().load('textures/img/uitlogo.png');
+      texture.center.set(0.5, 0.5); // tâm texture là giữa 
+      texture.offset.set(0, 0);  // đẩy vào giữa
+
       // Rào chán trên
       const geometry = new THREE.BoxGeometry(3.6, 2, 0.4);
       const material = new THREE.MeshStandardMaterial({
@@ -618,7 +621,7 @@ export class ObstacleManager {
         metalness: 0.1,
         roughness: 0.5,
         emissive: 0x000000,
-        emissiveIntensity: 0.05,
+        emissiveIntensity: 0.5,
       });
 
       const fence = new THREE.Mesh(geometry, material);
@@ -1127,16 +1130,16 @@ export class ObstacleManager {
       this.spawnRandomObstacle(-30 - i * 10);
     }
 
-    for (let i = 0; i < 20; i++) {
-      this.spawnCoin(-15 - i * 10);
-    }
+    // for (let i = 0; i < 20; i++) {
+    //   this.spawnCoin(-15 - i * 10);
+    // }
 
-    for (let i = 0; i < 1; i++) {
-      this.spawnShoe(-15 - i * 10);
-    }
+    // for (let i = 0; i < 1; i++) {
+    //   this.spawnShoe(-15 - i * 10);
+    // }
 
-    for (let i = 0; i < 1; i++) {
-      this.spawnShield(-15 - i * 10);
-    }
+    // for (let i = 0; i < 1; i++) {
+    //   this.spawnShield(-15 - i * 10);
+    // }
   }
 }
