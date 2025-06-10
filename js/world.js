@@ -365,7 +365,7 @@ export class World {
     const signGeometry = new THREE.BoxGeometry(w * 0.8, 1.2, 0.02);
     const textureLoader = new THREE.TextureLoader();
     const texture = textureLoader.load("textures/img/pepsi.jpg", () => {
-      //sign.material.map = texture;
+      sign.material.map = texture;
       sign.material.needsUpdate = true;
     });
     const signMaterial = new THREE.MeshLambertMaterial({ color: 0xffffff });
@@ -988,7 +988,7 @@ export class World {
         new THREE.BoxGeometry(w * 0.95, 0.1, 0.3),
         new THREE.MeshLambertMaterial({ color: 0xbbbbbb })
       );
-      balcony.position.set(0, y + 0.1, d / 2 + 0.15);
+      balcony.position.set(0, y - 0.6, d / 2 + 0.15);
       balcony.castShadow = true;
       balcony.receiveShadow = true;
       building.add(balcony);
@@ -998,7 +998,7 @@ export class World {
         new THREE.BoxGeometry(w * 0.9, 0.05, 0.05),
         new THREE.MeshLambertMaterial({ color: 0x222222 })
       );
-      railing.position.set(0, y + 0.3, d / 2 + 0.25);
+      railing.position.set(0, y -0.4 , d / 2 + 0.25);
       railing.castShadow = true;
       railing.receiveShadow = true;
       building.add(railing);

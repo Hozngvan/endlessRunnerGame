@@ -609,12 +609,12 @@ export class ObstacleManager {
     } else if (type === "fence") {
       obstacle = new THREE.Group();
 
-      //const texture = new THREE.TextureLoader().load('textures/imgepsi.jpg');
+      const texture = new THREE.TextureLoader().load('textures/img/pepsi.jpg');
       // Rào chán trên
       const geometry = new THREE.BoxGeometry(3.6, 2, 0.4);
       const material = new THREE.MeshStandardMaterial({
-        //map: texture,
-        color: 0x0000aa,
+        map: texture,
+        //color: 0x0000aa,
         metalness: 0.1,
         roughness: 0.5,
         emissive: 0x000000,

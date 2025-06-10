@@ -79,7 +79,7 @@ export class UI {
     this.nameInputElement.style.display = "none";
     this.nameInputElement.innerHTML = `
       <div style="
-        background: linear-gradient(145deg, #1e1e1e, #2a2a2a);
+        background: rgba(30,30,30,0.5);
         padding: 30px;
         border-radius: 15px;
         box-shadow: 0 0 20px rgba(0,0,0,0.6);
@@ -88,6 +88,11 @@ export class UI {
         font-family: 'Segoe UI', sans-serif;
         width: 300px;
       ">
+        <!-- Tên trò chơi -->
+        <div style="font-size: 32px; font-weight: bold; margin-bottom: 10px; color:rgb(255, 0, 0)">
+          Chicken Runner
+        </div>
+
         <h2 style="margin-bottom: 20px; font-size: 24px;">Enter Your Name</h2>
         <input 
           type="text" 

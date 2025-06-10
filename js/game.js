@@ -61,7 +61,7 @@ export class Game {
             this.player.position.z - 10
           );
         } else {
-          this.cameraTransition.end.set(0, 5, 10); // Góc nhìn thứ hai
+          this.cameraTransition.end.set(0, 5, 10); // Góc nhìn thứ 3
           this.cameraTransition.lookAt.set(0, 0, -10);
         }
 
@@ -362,7 +362,7 @@ export class Game {
     }
 
     // Switch Day - Night
-    const milestone = Math.floor(this.score / 1000);
+    const milestone = Math.floor(this.score / 500);
     if (milestone > this.lastLightingMilestone) {
       this.lastLightingMilestone = milestone;
       this.toggleLighting();
