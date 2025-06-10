@@ -268,6 +268,8 @@ export class Player {
       eye.receiveShadow = true;
       this.mesh.add(eye);
     }
+    this.legGroupRight = new THREE.Group();
+    this.legGroupLeft = new THREE.Group();
 
     // Group legs and toes
     this.legGroupLeft.position.set(0, 0, 0);
